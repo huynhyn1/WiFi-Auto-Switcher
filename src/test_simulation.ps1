@@ -1,6 +1,6 @@
 ﻿# ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6.4
+# WiFi Auto Switcher Pro v2.6.5
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -151,6 +151,18 @@ try {
     $recentSwitch = [DateTime]"2026-01-01T12:00:15"
     Record-Test "Switch cooldown blocks rapid retry" (-not (Test-SwitchCooldownElapsed -lastSwitchTime $recentSwitch -cooldownSeconds 20 -currentTime $fixedNow)) "Cho het 20 giay sau lan chuyen truoc"
     Record-Test "Switch cooldown allows retry after expiry" (Test-SwitchCooldownElapsed -lastSwitchTime $recentSwitch -cooldownSeconds 15 -currentTime $fixedNow) "Cho phep thu lai khi cooldown da het"
+    Record-Test "HTTPS probe accepts expected Internet response" (Test-InternetProbeResponse -statusCode 200 -responseBody "x" -responseHost "speed.cloudflare.com") "Chap nhan HTTPS thanh cong tu may chu Cloudflare"
+    Record-Test "HTTPS probe rejects captive portal redirect" (-not (Test-InternetProbeResponse -statusCode 200 -responseBody "Sign in to Wi-Fi" -responseHost "captive.portal")) "Tu choi trang dang nhap captive portal"
+    Record-Test "HTTPS probe rejects unexpected status" (-not (Test-InternetProbeResponse -statusCode 503 -responseBody "x" -responseHost "speed.cloudflare.com")) "Tu choi phan hoi HTTP loi"
+    $candidateNetworks = @(
+        [PSCustomObject]@{ SSID = "Current"; Signal = 95; IsSaved = $true },
+        [PSCustomObject]@{ SSID = "Strong"; Signal = 85; IsSaved = $true },
+        [PSCustomObject]@{ SSID = "Backup"; Signal = 70; IsSaved = $true },
+        [PSCustomObject]@{ SSID = "Guest"; Signal = 90; IsSaved = $false },
+        [PSCustomObject]@{ SSID = "Weak"; Signal = 30; IsSaved = $true }
+    )
+    $orderedCandidates = @(Get-AlternativeWifiCandidates -networks $candidateNetworks -currentSSID "Current" -currentConnected $true -currentSignal 40 -minimumSignal 40 -minimumImprovement 8)
+    Record-Test "Saved fallback networks are tried strongest first" ($orderedCandidates.Count -eq 2 -and $orderedCandidates[0].SSID -eq "Strong" -and $orderedCandidates[1].SSID -eq "Backup") "Loai mang hien tai, chua luu va yeu; sap xep ung vien du phong theo song"
 
     Write-Host "`n>>> KIEM TRA PHAN TICH NETSH DA NGON NGU..." -ForegroundColor Yellow
     $englishInterface = @(

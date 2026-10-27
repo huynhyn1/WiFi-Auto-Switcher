@@ -1,6 +1,6 @@
 ﻿<#
     ==========================================================================
-    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.4
+    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.5
     Hệ thống Tự Động 100% Giám Sát & Chuyển Đổi Wi-Fi Thông Minh Trên Windows
     Bản quyền thương mại / Zero-Dependency Portable Suite
     Mã hóa: UTF-8 with BOM (Hiển thị 100% phông chữ tiếng Việt chuẩn Segoe UI)
@@ -364,7 +364,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <TextBlock x:Name="TxtSidebarUptime" Text="00:00" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Border BorderBrush="#1E293B" BorderThickness="0,1,0,0" Margin="0,8,0,6"/>
-                                <TextBlock Text="Tác giả: S.Nova • v2.6.4" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tác giả: S.Nova • v2.6.5" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -818,7 +818,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                                     <TextBlock Text="Tác giả: S.Nova" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.4 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
+                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.5 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="TxtAuthorDesc" Text="Hệ thống tự động giám sát độ trễ &amp; chuyển đổi Wi-Fi thông minh trên Windows." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -1464,7 +1464,7 @@ function Measure-DualPingAndSpeed {
         try {
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.4")
+            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.5")
             $data = $wc.DownloadData($speedUrl)
             $sw.Stop()
             if ($data.Length -gt 0 -and $sw.Elapsed.TotalSeconds -gt 0.04) {
@@ -1480,14 +1480,22 @@ function Measure-DualPingAndSpeed {
 }
 
 function Connect-TargetWifi {
-    param([string]$ssid)
+    param(
+        [string]$ssid,
+        [string]$fallbackSSID
+    )
 
     $previousWifi = Get-WifiCurrentMetrics
+    $restoreSSID = if ($PSBoundParameters.ContainsKey("fallbackSSID")) { $fallbackSSID } elseif ($previousWifi.Connected) { $previousWifi.SSID } else { "" }
     Add-AuditLog "Bắt đầu tự động chuyển sang mạng: '$ssid'..." "SWITCH"
     $cur = Connect-WifiProfile -ssid $ssid -timeoutSeconds 15
     $Global:LastSwitchTime = [DateTime]::Now
 
-    if ((Test-WifiSwitchSucceeded -connection $cur -expectedSSID $ssid -internetReachable (Test-InternetConnectivity -targetHost $Global:Config.TargetPingHost))) {
+    $internetReachable = $false
+    if ($cur.Connected -and $cur.SSID -eq $ssid) {
+        $internetReachable = Test-InternetConnectivity
+    }
+    if ((Test-WifiSwitchSucceeded -connection $cur -expectedSSID $ssid -internetReachable $internetReachable)) {
         $Global:Config.TotalSwitchesCount++
         $Global:ConsecutiveFails = 0
         $Global:LowDownloadCount = 0
@@ -1498,16 +1506,16 @@ function Connect-TargetWifi {
     }
 
     Add-AuditLog "Wi-Fi '$ssid' đã không kết nối được hoặc không truy cập Internet; sẽ thử khôi phục mạng trước đó." "WARN"
-    if ($previousWifi.Connected -and $previousWifi.SSID -and $previousWifi.SSID -ne $ssid) {
-        $restoredWifi = Connect-WifiProfile -ssid $previousWifi.SSID -timeoutSeconds 15
-        if ($restoredWifi.Connected -and $restoredWifi.SSID -eq $previousWifi.SSID) {
-            if (Test-InternetConnectivity -targetHost $Global:Config.TargetPingHost) {
-                Add-AuditLog "Đã khôi phục mạng trước đó '$($previousWifi.SSID)' và xác nhận Internet hoạt động." "SUCCESS"
+    if ($restoreSSID -and $restoreSSID -ne $ssid) {
+        $restoredWifi = Connect-WifiProfile -ssid $restoreSSID -timeoutSeconds 15
+        if ($restoredWifi.Connected -and $restoredWifi.SSID -eq $restoreSSID) {
+            if (Test-InternetConnectivity) {
+                Add-AuditLog "Đã khôi phục mạng trước đó '$restoreSSID' và xác nhận Internet hoạt động." "SUCCESS"
             } else {
-                Add-AuditLog "Đã kết nối lại mạng trước đó '$($previousWifi.SSID)', nhưng Internet vẫn chưa phản hồi." "WARN"
+                Add-AuditLog "Đã kết nối lại mạng trước đó '$restoreSSID', nhưng Internet vẫn chưa phản hồi." "WARN"
             }
         } else {
-            Add-AuditLog "Không thể khôi phục mạng trước đó '$($previousWifi.SSID)'. Trạng thái hiện tại: $($restoredWifi.SSID)" "ERROR"
+            Add-AuditLog "Không thể khôi phục mạng trước đó '$restoreSSID'. Trạng thái hiện tại: $($restoredWifi.SSID)" "ERROR"
         }
     } else {
         Add-AuditLog "Không có mạng trước đó để khôi phục. Trạng thái hiện tại: $($cur.SSID)" "WARN"
@@ -1534,24 +1542,43 @@ function Connect-WifiProfile {
     return $currentWifi
 }
 
-function Test-InternetConnectivity {
-    param([string]$targetHost)
+function Test-InternetProbeResponse {
+    param(
+        [int]$statusCode,
+        [string]$responseBody,
+        [string]$responseHost
+    )
+    return ($statusCode -ge 200 -and $statusCode -lt 300 -and -not [string]::IsNullOrWhiteSpace($responseBody) -and $responseHost -ieq "speed.cloudflare.com")
+}
 
-    $ping = New-Object System.Net.NetworkInformation.Ping
-    try {
-        for ($attempt = 0; $attempt -lt 3; $attempt++) {
-            try {
-                $reply = $ping.Send($targetHost, 1200)
-                if ($reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success) {
-                    return $true
-                }
-            } catch { }
-            Start-Sleep -Milliseconds 250
+function Test-InternetConnectivity {
+    $probeUrl = "https://speed.cloudflare.com/__down?bytes=1"
+    $lastError = $null
+
+    for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        $response = $null
+        $reader = $null
+        try {
+            $request = [System.Net.HttpWebRequest]::Create($probeUrl)
+            $request.Method = "GET"
+            $request.Timeout = 3000
+            $request.ReadWriteTimeout = 3000
+            $response = $request.GetResponse()
+            $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+            $body = $reader.ReadToEnd()
+            return (Test-InternetProbeResponse -statusCode ([int]$response.StatusCode) -responseBody $body -responseHost $response.ResponseUri.Host)
+        } catch {
+            $lastError = $_.Exception.Message
+        } finally {
+            if ($reader) { $reader.Dispose() }
+            if ($response) { $response.Dispose() }
         }
-        return $false
-    } finally {
-        $ping.Dispose()
+
+        if ($attempt -lt 1) { Start-Sleep -Milliseconds 300 }
     }
+
+    Add-AuditLog "Kiểm tra Internet qua HTTPS thất bại sau 2 lần thử: $lastError" "WARN"
+    return $false
 }
 
 function Test-WifiSwitchSucceeded {
@@ -1828,6 +1855,24 @@ function Test-SwitchCooldownElapsed {
     return ($lastSwitchTime -eq [DateTime]::MinValue -or $cooldownSeconds -le 0 -or ($currentTime - $lastSwitchTime).TotalSeconds -ge $cooldownSeconds)
 }
 
+function Get-AlternativeWifiCandidates {
+    param(
+        [object[]]$networks,
+        [string]$currentSSID,
+        [bool]$currentConnected,
+        [int]$currentSignal,
+        [int]$minimumSignal,
+        [int]$minimumImprovement
+    )
+
+    return @($networks | Where-Object {
+        $_.IsSaved -and
+        $_.SSID -ne $currentSSID -and
+        $_.Signal -gt $minimumSignal -and
+        (Test-AlternativeNetworkIsBetter -currentConnected $currentConnected -currentSignal $currentSignal -candidateSignal $_.Signal -minimumImprovement $minimumImprovement)
+    } | Sort-Object -Property Signal -Descending)
+}
+
 # ==================== THUẬT TOÁN TỰ ĐỘNG CHUYỂN MẠNG 100% ====================
 
 function Execute-MonitoringCycle {
@@ -1913,21 +1958,23 @@ function Execute-MonitoringCycle {
                 }
 
                 if ($isEmergency -or $Global:ConsecutiveFails -ge 1) {
-                    $candidates = $availNetworks | Where-Object {
-                        $_.IsSaved -and ($_.SSID -ne $curWifi.SSID) -and ($_.Signal -gt $Global:Config.MinSignalPercent)
-                    } | Sort-Object -Property Signal -Descending
+                    $candidates = @(Get-AlternativeWifiCandidates -networks $availNetworks -currentSSID $curWifi.SSID -currentConnected $curWifi.Connected -currentSignal $curWifi.Signal -minimumSignal $Global:Config.MinSignalPercent -minimumImprovement $Global:Config.MinSignalImprovement)
 
                     if ($candidates -and $candidates.Count -gt 0) {
-                        $bestTarget = $candidates[0]
-                        $requiredImprovement = [Math]::Max(1, $Global:Config.MinSignalImprovement)
-                        if (Test-AlternativeNetworkIsBetter -currentConnected $curWifi.Connected -currentSignal $curWifi.Signal -candidateSignal $bestTarget.Signal -minimumImprovement $Global:Config.MinSignalImprovement) {
-                            Add-AuditLog "[TỰ ĐỘNG 100%] Đang chuyển đổi sang Wi-Fi '$($bestTarget.SSID)' (Sóng $($bestTarget.Signal)%, $($bestTarget.Band))..." "SWITCH"
-                            Connect-TargetWifi -ssid $bestTarget.SSID
-                        } else {
-                            Add-AuditLog "Wi-Fi '$($bestTarget.SSID)' chưa tốt hơn đủ mức ($($bestTarget.Signal)% vs $($curWifi.Signal)%; cần hơn ít nhất $requiredImprovement%). Tiếp tục giữ mạng." "INFO"
+                        $switchSucceeded = $false
+                        $fallbackSSID = if ($curWifi.Connected) { $curWifi.SSID } else { "" }
+                        foreach ($candidate in $candidates) {
+                            Add-AuditLog "[TỰ ĐỘNG] Thử Wi-Fi đã lưu '$($candidate.SSID)' (Sóng $($candidate.Signal)%, $($candidate.Band))..." "SWITCH"
+                            if (Connect-TargetWifi -ssid $candidate.SSID -fallbackSSID $fallbackSSID) {
+                                $switchSucceeded = $true
+                                break
+                            }
+                        }
+                        if (-not $switchSucceeded) {
+                            Add-AuditLog "Không ứng viên Wi-Fi nào trong $($candidates.Count) mạng đã thử xác nhận được Internet." "WARN"
                         }
                     } else {
-                        Add-AuditLog "Không tìm thấy Wi-Fi đã lưu nào khác có sóng tốt xung quanh." "WARN"
+                        Add-AuditLog "Không tìm thấy Wi-Fi đã lưu nào khác đáp ứng ngưỡng tín hiệu và mức cải thiện." "WARN"
                     }
                 }
             } else {
@@ -2342,7 +2389,7 @@ $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
 $isSilentStart = ($Global:AppCliArgs -contains "--minimized" -or $Global:AppCliArgs -contains "--tray" -or $Global:AppCliArgs -contains "--startup")
 
 $window.Add_Loaded({
-    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.4." "SYSTEM"
+    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.5." "SYSTEM"
     Add-AuditLog "Chế độ bảo vệ tự động đang hoạt động ngầm. Chu kỳ quét: $($Global:Config.CheckIntervalSeconds)s." "SYSTEM"
     
     # Khởi tạo trạng thái Profile trực quan đúng với config.json
