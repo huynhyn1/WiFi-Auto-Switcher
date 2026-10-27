@@ -1,4 +1,4 @@
-# WiFi Auto Switcher Pro v2.6.5
+# WiFi Auto Switcher Pro v2.6.6
 
 Ứng dụng Windows theo dõi chất lượng kết nối và tự động chuyển sang mạng Wi-Fi đã lưu phù hợp hơn.
 
@@ -15,6 +15,7 @@
 - Tốc độ download thấp hoặc phép đo trả về 0 phải lặp lại trong ba lần kiểm tra liên tiếp; log cũng ghi tình trạng kết nối tới router. Chỉ thử chuyển nếu có Wi-Fi đã lưu mạnh hơn ít nhất ngưỡng cải thiện cấu hình.
 - Chỉ xác nhận chuyển mạng khi kết nối đúng Wi-Fi đích và Internet phản hồi; nếu không, ứng dụng thử khôi phục Wi-Fi trước đó. Cooldown được áp dụng sau cả lần chuyển thất bại để tránh thử đi thử lại quá nhanh.
 - Xác nhận Internet qua HTTPS đến máy chủ Cloudflare, không phụ thuộc ping ICMP; nếu Wi-Fi đã lưu mạnh nhất không có Internet, lần lượt thử các ứng viên đạt ngưỡng kế tiếp.
+- Cho phép chuyển mạng cứu hộ ngay khi mất kết nối, xác nhận sóng yếu qua ba chu kỳ liên tiếp và tạm tránh BSSID lỗi trong 120 giây.
 - Có các cấu hình nhanh cho chơi game, sử dụng thông thường, tiết kiệm mạng và tùy chỉnh.
 - Giao diện tiếng Việt và tiếng Anh, kèm cửa sổ mini theo dõi trạng thái mạng.
 - Phân tích thông tin Wi-Fi từ Windows bằng cả tiếng Việt và tiếng Anh.

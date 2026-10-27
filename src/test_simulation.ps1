@@ -1,6 +1,6 @@
 ﻿# ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6.5
+# WiFi Auto Switcher Pro v2.6.6
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -151,18 +151,29 @@ try {
     $recentSwitch = [DateTime]"2026-01-01T12:00:15"
     Record-Test "Switch cooldown blocks rapid retry" (-not (Test-SwitchCooldownElapsed -lastSwitchTime $recentSwitch -cooldownSeconds 20 -currentTime $fixedNow)) "Cho het 20 giay sau lan chuyen truoc"
     Record-Test "Switch cooldown allows retry after expiry" (Test-SwitchCooldownElapsed -lastSwitchTime $recentSwitch -cooldownSeconds 15 -currentTime $fixedNow) "Cho phep thu lai khi cooldown da het"
+    Record-Test "Emergency switch bypasses cooldown" (Test-SwitchCooldownAllowsAttempt -lastSwitchTime $recentSwitch -cooldownSeconds 60 -isEmergency $true -currentTime $fixedNow) "Cho phep cuu mang ngay khi mat ket noi"
+    Record-Test "Disconnected Wi-Fi is an emergency" (Test-EmergencyNetworkFailure -currentConnected $false -internetPingSucceeded $false -gatewayPingMs -1) "Mất lien ket Wi-Fi duoc cuu ngay"
+    Record-Test "Gateway and Internet failure is an emergency" (Test-EmergencyNetworkFailure -currentConnected $true -internetPingSucceeded $false -gatewayPingMs -1) "Chi cuu khan cap khi router va Internet deu khong phan hoi"
+    Record-Test "Internet ping failure with live gateway respects cooldown" (-not (Test-EmergencyNetworkFailure -currentConnected $true -internetPingSucceeded $false -gatewayPingMs 5)) "Khong vuot cooldown khi router van phan hoi"
+    Record-Test "Weak signal needs repeated confirmation" (-not (Test-SignalDegradationConfirmed -signal 35 -minimumSignal 40 -consecutiveWeakObservations 2)) "Khong doi mang do mot vai mau song yeu"
+    Record-Test "Persistent weak signal triggers degradation" (Test-SignalDegradationConfirmed -signal 35 -minimumSignal 40 -consecutiveWeakObservations 3) "Xac nhan song yeu sau ba chu ky"
+    Record-Test "Recovered signal resets degradation" (-not (Test-SignalDegradationConfirmed -signal 45 -minimumSignal 40 -consecutiveWeakObservations 3)) "Khong coi song phuc hoi la mang yeu"
     Record-Test "HTTPS probe accepts expected Internet response" (Test-InternetProbeResponse -statusCode 200 -responseBody "x" -responseHost "speed.cloudflare.com") "Chap nhan HTTPS thanh cong tu may chu Cloudflare"
     Record-Test "HTTPS probe rejects captive portal redirect" (-not (Test-InternetProbeResponse -statusCode 200 -responseBody "Sign in to Wi-Fi" -responseHost "captive.portal")) "Tu choi trang dang nhap captive portal"
     Record-Test "HTTPS probe rejects unexpected status" (-not (Test-InternetProbeResponse -statusCode 503 -responseBody "x" -responseHost "speed.cloudflare.com")) "Tu choi phan hoi HTTP loi"
     $candidateNetworks = @(
-        [PSCustomObject]@{ SSID = "Current"; Signal = 95; IsSaved = $true },
-        [PSCustomObject]@{ SSID = "Strong"; Signal = 85; IsSaved = $true },
-        [PSCustomObject]@{ SSID = "Backup"; Signal = 70; IsSaved = $true },
-        [PSCustomObject]@{ SSID = "Guest"; Signal = 90; IsSaved = $false },
-        [PSCustomObject]@{ SSID = "Weak"; Signal = 30; IsSaved = $true }
+        [PSCustomObject]@{ SSID = "Current"; Signal = 95; IsSaved = $true; BSSID = "00:00:00:00:00:01" },
+        [PSCustomObject]@{ SSID = "Strong"; Signal = 85; IsSaved = $true; BSSID = "00:00:00:00:00:02" },
+        [PSCustomObject]@{ SSID = "Backup"; Signal = 70; IsSaved = $true; BSSID = "00:00:00:00:00:03" },
+        [PSCustomObject]@{ SSID = "Guest"; Signal = 90; IsSaved = $false; BSSID = "00:00:00:00:00:04" },
+        [PSCustomObject]@{ SSID = "Weak"; Signal = 30; IsSaved = $true; BSSID = "00:00:00:00:00:05" }
     )
-    $orderedCandidates = @(Get-AlternativeWifiCandidates -networks $candidateNetworks -currentSSID "Current" -currentConnected $true -currentSignal 40 -minimumSignal 40 -minimumImprovement 8)
-    Record-Test "Saved fallback networks are tried strongest first" ($orderedCandidates.Count -eq 2 -and $orderedCandidates[0].SSID -eq "Strong" -and $orderedCandidates[1].SSID -eq "Backup") "Loai mang hien tai, chua luu va yeu; sap xep ung vien du phong theo song"
+    $Global:WifiBlacklist = @{}
+    Add-TemporaryWifiBlacklist -ssid "Strong" -bssid "00:00:00:00:00:02" -durationSeconds 120 -currentTime $fixedNow
+    $orderedCandidates = @(Get-AlternativeWifiCandidates -networks $candidateNetworks -currentSSID "Current" -currentConnected $true -currentSignal 40 -minimumSignal 40 -minimumImprovement 8 -currentTime $fixedNow)
+    Record-Test "Failed BSSID is temporarily avoided" ($orderedCandidates.Count -eq 1 -and $orderedCandidates[0].SSID -eq "Backup") "Tam bo qua AP vua that bai va van giu mang du phong tiep theo"
+    $blacklistExpired = @(Get-AlternativeWifiCandidates -networks $candidateNetworks -currentSSID "Current" -currentConnected $true -currentSignal 40 -minimumSignal 40 -minimumImprovement 8 -currentTime $fixedNow.AddSeconds(121))
+    Record-Test "Failed BSSID returns after blacklist expires" ($blacklistExpired.Count -eq 2 -and $blacklistExpired[0].SSID -eq "Strong") "Cho phep thu lai AP sau thoi han 120 giay"
 
     Write-Host "`n>>> KIEM TRA PHAN TICH NETSH DA NGON NGU..." -ForegroundColor Yellow
     $englishInterface = @(
@@ -196,14 +207,15 @@ try {
     $savedProfilesForParser.Add("WiFi Nhà")
     $vietnameseRadar = @(
         "SSID 1 : WiFi Nhà",
+        "    BSSID 1 : 00:11:22:33:44:77",
         "    Tín hiệu             : 82%",
         "    Loại radio           : 802.11ax",
         "    Kênh                 : 149",
         "    SSID 2 : Guest"
     )
     $parsedRadar = @(ConvertFrom-NetshWifiNetworks -lines $vietnameseRadar -savedProfiles $savedProfilesForParser -currentSSID "WiFi Nhà")
-    $radarPass = ($parsedRadar.Count -eq 2 -and $parsedRadar[0].SSID -eq "WiFi Nhà" -and $parsedRadar[0].Signal -eq 82 -and $parsedRadar[0].IsSaved -and $parsedRadar[0].IsCurrent -and $parsedRadar[0].Band -eq "5 GHz")
-    $radarDetails = ($parsedRadar | ForEach-Object { "{0} (Signal={1}, Saved={2}, Current={3}, Band={4})" -f $_.SSID, $_.Signal, $_.IsSaved, $_.IsCurrent, $_.Band }) -join "; "
+    $radarPass = ($parsedRadar.Count -eq 2 -and $parsedRadar[0].SSID -eq "WiFi Nhà" -and $parsedRadar[0].Signal -eq 82 -and $parsedRadar[0].IsSaved -and $parsedRadar[0].IsCurrent -and $parsedRadar[0].Band -eq "5 GHz" -and $parsedRadar[0].BSSID -eq "00:11:22:33:44:77")
+    $radarDetails = ($parsedRadar | ForEach-Object { "{0} (Signal={1}, Saved={2}, Current={3}, Band={4}, BSSID={5})" -f $_.SSID, $_.Signal, $_.IsSaved, $_.IsCurrent, $_.Band, $_.BSSID }) -join "; "
     Record-Test "Vietnamese netsh radar parsing" $radarPass ("Count={0}; {1}" -f $parsedRadar.Count, $radarDetails)
 
     Write-Host "`n>>> 6. MO PHONG NHAT KY KIEM TOAN (AUDIT LOGS)..." -ForegroundColor Yellow
