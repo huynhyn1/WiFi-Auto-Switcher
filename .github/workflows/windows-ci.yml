@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Validate PowerShell syntax and encoding
         shell: powershell
@@ -34,7 +34,7 @@ jobs:
         run: .\src\package.ps1
 
       - name: Upload Windows package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: WiFi-Auto-Switcher-Windows
           path: dist\WiFi-Auto-Switcher-*-Windows.zip
