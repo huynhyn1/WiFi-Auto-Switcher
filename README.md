@@ -1,4 +1,4 @@
-# WiFi Auto Switcher Pro v2.6
+# WiFi Auto Switcher Pro v2.6.1
 
 Ứng dụng Windows theo dõi chất lượng kết nối và tự động chuyển sang mạng Wi-Fi đã lưu phù hợp hơn.
 
@@ -12,6 +12,7 @@
 
 - Theo dõi độ trễ, tín hiệu và chất lượng kết nối Wi-Fi.
 - Tự động chuyển sang mạng Wi-Fi đã lưu khi mạng hiện tại không ổn định.
+- Tốc độ tải xuống không đo được (0 Mbps) cũng được xem là kết nối yếu để thử chuyển mạng.
 - Có các cấu hình nhanh cho chơi game, sử dụng thông thường, tiết kiệm mạng và tùy chỉnh.
 - Giao diện tiếng Việt và tiếng Anh, kèm cửa sổ mini theo dõi trạng thái mạng.
 - Có thể chạy trực tiếp hoặc thiết lập shortcut và khởi động cùng Windows.

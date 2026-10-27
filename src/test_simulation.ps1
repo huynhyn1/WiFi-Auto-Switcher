@@ -1,6 +1,6 @@
 # ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6
+# WiFi Auto Switcher Pro v2.6.1
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -129,6 +129,12 @@ try {
 
     $h3 = Get-NetworkHealthScore -signal 25 -wanPingMs 350 -packetLoss 40 -speedMbps 0.5
     Record-Test "Health Score (Critical Net)" ($h3.Score -lt 50) ("Diem so: {0}/100 - Trang thai: {1}" -f $h3.Score, $h3.Quality)
+
+    Write-Host "`n>>> KIEM TRA NGUONG TOC DO TAI XUONG..." -ForegroundColor Yellow
+    Record-Test "Download failure triggers low-speed rule" (Test-DownloadSpeedBelowMinimum -speedMbps 0 -minimumMbps 2) "Toc do 0 Mbps duoi nguong va kich hoat dieu kien mang yeu"
+    Record-Test "Download below minimum triggers" (Test-DownloadSpeedBelowMinimum -speedMbps 1.5 -minimumMbps 2) "Toc do thap hon nguong kich hoat dieu kien mang yeu"
+    Record-Test "Download at minimum does not trigger" (-not (Test-DownloadSpeedBelowMinimum -speedMbps 2 -minimumMbps 2)) "Toc do bang nguong khong bi xem la thap"
+    Record-Test "Download above minimum does not trigger" (-not (Test-DownloadSpeedBelowMinimum -speedMbps 5 -minimumMbps 2)) "Toc do tren nguong khong bi xem la thap"
 
     Write-Host "`n>>> 6. MO PHONG NHAT KY KIEM TOAN (AUDIT LOGS)..." -ForegroundColor Yellow
     Add-AuditLog "Mo phong bai test ghi log he thong tu dong." "SYSTEM"

@@ -32,7 +32,7 @@ try {
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     $outputDirectory = Join-Path $projectRoot "dist"
-    $OutputPath = Join-Path $outputDirectory ("WiFi-Auto-Switcher-v{0}.{1}-Windows.zip" -f $version.Major, $version.Minor)
+    $OutputPath = Join-Path $outputDirectory ("WiFi-Auto-Switcher-v{0}.{1}.{2}-Windows.zip" -f $version.Major, $version.Minor, $version.Build)
 } else {
     $OutputPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
     $outputDirectory = Split-Path -Parent $OutputPath
@@ -45,7 +45,7 @@ if ([string]::IsNullOrWhiteSpace($outputDirectory)) {
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
 
 $stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("wifi-auto-switcher-" + [guid]::NewGuid().ToString("N"))
-$packageDirectory = Join-Path $stagingRoot ("WiFi-Auto-Switcher-v{0}.{1}-Windows" -f $version.Major, $version.Minor)
+$packageDirectory = Join-Path $stagingRoot ("WiFi-Auto-Switcher-v{0}.{1}.{2}-Windows" -f $version.Major, $version.Minor, $version.Build)
 
 try {
     New-Item -ItemType Directory -Path $packageDirectory -Force | Out-Null

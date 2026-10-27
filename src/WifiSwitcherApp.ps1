@@ -1,6 +1,6 @@
 ﻿<#
     ==========================================================================
-    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6
+    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.1
     Hệ thống Tự Động 100% Giám Sát & Chuyển Đổi Wi-Fi Thông Minh Trên Windows
     Bản quyền thương mại / Zero-Dependency Portable Suite
     Mã hóa: UTF-8 with BOM (Hiển thị 100% phông chữ tiếng Việt chuẩn Segoe UI)
@@ -363,7 +363,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <TextBlock x:Name="TxtSidebarUptime" Text="00:00" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Border BorderBrush="#1E293B" BorderThickness="0,1,0,0" Margin="0,8,0,6"/>
-                                <TextBlock Text="Tác giả: S.Nova • v2.6" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tác giả: S.Nova • v2.6.1" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -817,7 +817,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                                     <TextBlock Text="Tác giả: S.Nova" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
+                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.1 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="TxtAuthorDesc" Text="Hệ thống tự động giám sát độ trễ &amp; chuyển đổi Wi-Fi thông minh trên Windows." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -1424,7 +1424,7 @@ function Measure-DualPingAndSpeed {
         try {
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6")
+            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.1")
             $data = $wc.DownloadData($speedUrl)
             $sw.Stop()
             if ($data.Length -gt 0 -and $sw.Elapsed.TotalSeconds -gt 0.04) {
@@ -1690,6 +1690,14 @@ function Update-DashboardUI {
     $MiniSpeed.Text = "$($metrics.SpeedMbps) Mbps"
 }
 
+function Test-DownloadSpeedBelowMinimum {
+    param(
+        [double]$speedMbps,
+        [double]$minimumMbps
+    )
+    return ($speedMbps -lt $minimumMbps)
+}
+
 # ==================== THUẬT TOÁN TỰ ĐỘNG CHUYỂN MẠNG 100% ====================
 
 function Execute-MonitoringCycle {
@@ -1733,9 +1741,13 @@ function Execute-MonitoringCycle {
                     $reasons.Add("Mất gói tin ($($metrics.PacketLoss)%) vượt mức cho phép")
                 }
 
-                if ($metrics.SpeedMbps -gt 0 -and $metrics.SpeedMbps -lt $Global:Config.MinSpeedMbps) {
+                if (Test-DownloadSpeedBelowMinimum -speedMbps $metrics.SpeedMbps -minimumMbps $Global:Config.MinSpeedMbps) {
                     $isLagging = $true
-                    $reasons.Add("Băng thông ($($metrics.SpeedMbps) Mbps) &lt; $($Global:Config.MinSpeedMbps) Mbps")
+                    if ($metrics.SpeedMbps -le 0) {
+                        $reasons.Add("Không đo được tốc độ tải xuống (0 Mbps)")
+                    } else {
+                        $reasons.Add("Băng thông ($($metrics.SpeedMbps) Mbps) &lt; $($Global:Config.MinSpeedMbps) Mbps")
+                    }
                 }
 
                 if ($curWifi.Signal -lt $Global:Config.MinSignalPercent) {
@@ -2182,7 +2194,7 @@ $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
 $isSilentStart = ($Global:AppCliArgs -contains "--minimized" -or $Global:AppCliArgs -contains "--tray" -or $Global:AppCliArgs -contains "--startup")
 
 $window.Add_Loaded({
-    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6." "SYSTEM"
+    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.1." "SYSTEM"
     Add-AuditLog "Chế độ bảo vệ tự động đang hoạt động ngầm. Chu kỳ quét: $($Global:Config.CheckIntervalSeconds)s." "SYSTEM"
     
     # Khởi tạo trạng thái Profile trực quan đúng với config.json
