@@ -12,8 +12,8 @@ using System.Management.Automation.Runspaces;
 [assembly: AssemblyProduct("WiFi Auto Switcher Pro")]
 [assembly: AssemblyCompany("S.Nova")]
 [assembly: AssemblyDescription("Intelligent Wi-Fi Auto Switcher & Network Monitor for Windows by S.Nova")]
-[assembly: AssemblyVersion("2.5.0.0")]
-[assembly: AssemblyFileVersion("2.5.0.0")]
+[assembly: AssemblyVersion("2.6.0.0")]
+[assembly: AssemblyFileVersion("2.6.0.0")]
 [assembly: AssemblyCopyright("Copyright © 2026 S.Nova")]
 
 static class Program {

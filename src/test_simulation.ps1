@@ -1,6 +1,6 @@
 # ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.5
+# WiFi Auto Switcher Pro v2.6
 # Tac gia: S.Nova
 # ==============================================================================
 

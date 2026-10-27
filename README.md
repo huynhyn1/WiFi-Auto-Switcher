@@ -1,4 +1,4 @@
-# WiFi Auto Switcher Pro
+# WiFi Auto Switcher Pro v2.6
 
 Ứng dụng Windows theo dõi chất lượng kết nối và tự động chuyển sang mạng Wi-Fi đã lưu phù hợp hơn.
 
@@ -19,10 +19,10 @@
 ## Cài đặt
 
 1. Tải gói ZIP mới nhất từ [Releases](https://github.com/huynhyn1/WiFi-Auto-Switcher/releases/latest).
-2. Giải nén toàn bộ gói vào một thư mục; không chạy `Setup.exe` trực tiếp bên trong ZIP.
-3. Mở `Setup.exe` để tạo shortcut và chọn tùy chọn khởi động cùng Windows. Có thể mở `WiFiAutoSwitcher.exe` để chạy trực tiếp.
+2. Giải nén toàn bộ gói vào thư mục, rồi mở `Setup.exe`.
+3. Chọn tùy chọn shortcut hoặc khởi động cùng Windows. Trình cài đặt chép ứng dụng vào thư mục người dùng; sau đó có thể xóa thư mục ZIP đã giải nén.
 
-Giữ các tệp trong cùng thư mục để trình cài đặt và ứng dụng tìm thấy các thành phần đi kèm. Ứng dụng chỉ có thể chuyển sang các mạng Wi-Fi đã được lưu trên máy.
+`Setup.exe` cài ứng dụng vào `%LOCALAPPDATA%\Programs\WiFi Auto Switcher Pro`; sau đó có thể xóa thư mục ZIP đã giải nén. Cấu hình và nhật ký được lưu riêng trong `%LOCALAPPDATA%\WiFi Auto Switcher Pro`, được chuyển từ bản cài cũ nếu có và giữ lại khi gỡ ứng dụng. Ứng dụng chỉ có thể chuyển sang các mạng Wi-Fi đã được lưu trên máy. Để gỡ hoàn toàn dữ liệu cá nhân, hãy xóa thư mục dữ liệu này sau khi gỡ cài đặt.
 
 Hướng dẫn chi tiết: [HUONG-DAN-SU-DUNG.html](HUONG-DAN-SU-DUNG.html).
 
@@ -50,7 +50,7 @@ Gói ZIP được tạo trong `dist/`. Có thể truyền `-OutputPath` để ch
 | --- | --- |
 | `src/` | Mã nguồn C#, ứng dụng PowerShell, script build và kiểm thử |
 | `legacy/` | Các script khởi chạy và cài đặt cũ |
-| `Setup.exe` | Tiện ích tạo shortcut và cấu hình khởi động cùng Windows |
+| `Setup.exe` | Trình cài đặt/gỡ cài đặt ứng dụng |
 | `WiFiAutoSwitcher.exe` | Ứng dụng Windows |
 | `WifiSwitcherApp.ps1` | Script ứng dụng chạy cạnh tệp `.exe` |
 | `config.json` | Cấu hình mặc định |

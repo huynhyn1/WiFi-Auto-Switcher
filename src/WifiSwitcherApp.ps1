@@ -1,6 +1,6 @@
 ﻿<#
     ==========================================================================
-    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.5
+    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6
     Hệ thống Tự Động 100% Giám Sát & Chuyển Đổi Wi-Fi Thông Minh Trên Windows
     Bản quyền thương mại / Zero-Dependency Portable Suite
     Mã hóa: UTF-8 with BOM (Hiển thị 100% phông chữ tiếng Việt chuẩn Segoe UI)
@@ -21,8 +21,11 @@ if (-not $ScriptDir -and $MyInvocation -and $MyInvocation.MyCommand -and $MyInvo
     try { $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path } catch { }
 }
 if (-not $ScriptDir) { $ScriptDir = (Get-Location).Path }
-$ConfigFile = Join-Path $ScriptDir "config.json"
-$LogExportFile = Join-Path $ScriptDir "BaoCao-SuKien-WiFi.csv"
+$DataDirectory = Join-Path $env:LOCALAPPDATA "WiFi Auto Switcher Pro"
+New-Item -ItemType Directory -Path $DataDirectory -Force | Out-Null
+$ConfigFile = Join-Path $DataDirectory "config.json"
+$LogExportFile = Join-Path $DataDirectory "BaoCao-SuKien-WiFi.csv"
+$LegacyConfigFile = Join-Path $ScriptDir "config.json"
 
 # ==================== CẤU HÌNH MẶC ĐỊNH CHUẨN THƯƠNG MẠI ====================
 $DefaultConfig = [PSCustomObject]@{
@@ -50,6 +53,10 @@ $DefaultConfig = [PSCustomObject]@{
 
 # Tải cấu hình từ config.json
 $Global:Config = $DefaultConfig
+if (-not (Test-Path $ConfigFile) -and (Test-Path $LegacyConfigFile)) {
+    Copy-Item -LiteralPath $LegacyConfigFile -Destination $ConfigFile
+}
+
 if (Test-Path $ConfigFile) {
     try {
         $loaded = Get-Content -Path $ConfigFile -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -95,7 +102,7 @@ $Global:PingHistory         = [System.Collections.Generic.List[int]]::new()
 $Global:EventLogsList       = [System.Collections.Generic.List[PSCustomObject]]::new()
 $Global:DetectedGateway     = "192.168.1.1"
 
-# ==================== GIAO DIỆN XAML THƯƠNG MẠI PRO V2.5 ====================
+# ==================== GIAO DIỆN XAML THƯƠNG MẠI PRO V2.6 ====================
 [xml]$xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -356,7 +363,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <TextBlock x:Name="TxtSidebarUptime" Text="00:00" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Border BorderBrush="#1E293B" BorderThickness="0,1,0,0" Margin="0,8,0,6"/>
-                                <TextBlock Text="Tác giả: S.Nova • v2.5" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tác giả: S.Nova • v2.6" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -810,7 +817,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                                     <TextBlock Text="Tác giả: S.Nova" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="WiFi Auto Switcher Pro v2.5 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
+                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="TxtAuthorDesc" Text="Hệ thống tự động giám sát độ trễ &amp; chuyển đổi Wi-Fi thông minh trên Windows." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -1417,7 +1424,7 @@ function Measure-DualPingAndSpeed {
         try {
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.5")
+            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6")
             $data = $wc.DownloadData($speedUrl)
             $sw.Stop()
             if ($data.Length -gt 0 -and $sw.Elapsed.TotalSeconds -gt 0.04) {
@@ -2175,7 +2182,7 @@ $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
 $isSilentStart = ($Global:AppCliArgs -contains "--minimized" -or $Global:AppCliArgs -contains "--tray" -or $Global:AppCliArgs -contains "--startup")
 
 $window.Add_Loaded({
-    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.5." "SYSTEM"
+    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6." "SYSTEM"
     Add-AuditLog "Chế độ bảo vệ tự động đang hoạt động ngầm. Chu kỳ quét: $($Global:Config.CheckIntervalSeconds)s." "SYSTEM"
     
     # Khởi tạo trạng thái Profile trực quan đúng với config.json
