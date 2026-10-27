@@ -1,6 +1,6 @@
 ﻿# ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6.3
+# WiFi Auto Switcher Pro v2.6.4
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -143,6 +143,14 @@ try {
     Record-Test "Stronger candidate meets improvement threshold" (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 48 -minimumImprovement 8) "Mang thay the manh hon du nguong"
     Record-Test "Slightly stronger candidate is rejected" (-not (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 47 -minimumImprovement 8)) "Khong doi sang mang chi manh hon mot chut"
     Record-Test "Equal signal candidate is rejected" (-not (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 40 -minimumImprovement 0)) "Khong doi sang mang co song bang mang hien tai"
+    $healthyConnection = [PSCustomObject]@{ Connected = $true; SSID = "Home WiFi" }
+    Record-Test "Switch requires target SSID and Internet" (Test-WifiSwitchSucceeded -connection $healthyConnection -expectedSSID "Home WiFi" -internetReachable $true) "Xac nhan thanh cong khi dung SSID va co Internet"
+    Record-Test "Connected Wi-Fi without Internet is rejected" (-not (Test-WifiSwitchSucceeded -connection $healthyConnection -expectedSSID "Home WiFi" -internetReachable $false)) "Khong coi Wi-Fi khong co Internet la chuyen thanh cong"
+    Record-Test "Unexpected connected SSID is rejected" (-not (Test-WifiSwitchSucceeded -connection $healthyConnection -expectedSSID "Guest" -internetReachable $true)) "Khong coi ket noi nham SSID la thanh cong"
+    $fixedNow = [DateTime]"2026-01-01T12:00:30"
+    $recentSwitch = [DateTime]"2026-01-01T12:00:15"
+    Record-Test "Switch cooldown blocks rapid retry" (-not (Test-SwitchCooldownElapsed -lastSwitchTime $recentSwitch -cooldownSeconds 20 -currentTime $fixedNow)) "Cho het 20 giay sau lan chuyen truoc"
+    Record-Test "Switch cooldown allows retry after expiry" (Test-SwitchCooldownElapsed -lastSwitchTime $recentSwitch -cooldownSeconds 15 -currentTime $fixedNow) "Cho phep thu lai khi cooldown da het"
 
     Write-Host "`n>>> KIEM TRA PHAN TICH NETSH DA NGON NGU..." -ForegroundColor Yellow
     $englishInterface = @(
