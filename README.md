@@ -1,4 +1,4 @@
-# WiFi Auto Switcher Pro v2.6.2
+# WiFi Auto Switcher Pro v2.6.3
 
 Ứng dụng Windows theo dõi chất lượng kết nối và tự động chuyển sang mạng Wi-Fi đã lưu phù hợp hơn.
 
@@ -15,6 +15,7 @@
 - Tốc độ download thấp hoặc phép đo trả về 0 phải lặp lại trong ba lần kiểm tra liên tiếp; log cũng ghi tình trạng kết nối tới router. Chỉ thử chuyển nếu có Wi-Fi đã lưu mạnh hơn ít nhất ngưỡng cải thiện cấu hình.
 - Có các cấu hình nhanh cho chơi game, sử dụng thông thường, tiết kiệm mạng và tùy chỉnh.
 - Giao diện tiếng Việt và tiếng Anh, kèm cửa sổ mini theo dõi trạng thái mạng.
+- Phân tích thông tin Wi-Fi từ Windows bằng cả tiếng Việt và tiếng Anh.
 - Có thể chạy trực tiếp hoặc thiết lập shortcut và khởi động cùng Windows.
 
 ## Cài đặt
@@ -44,6 +45,8 @@ Script biên dịch tạo `WiFiAutoSwitcher.exe` và `Setup.exe` ở thư mục 
 ```
 
 Gói ZIP được tạo trong `dist/`. Có thể truyền `-OutputPath` để chọn vị trí lưu khác.
+
+GitHub Actions tự động kiểm tra cú pháp, build ứng dụng Windows và chạy kiểm thử mô phỏng khi có push hoặc pull request vào `main`. Bản build CI được lưu dưới dạng workflow artifact.
 
 ## Cấu trúc dự án
 

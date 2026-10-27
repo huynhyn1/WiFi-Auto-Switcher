@@ -2,7 +2,8 @@ $enc = New-Object System.Text.UTF8Encoding($true)
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $paths = @(
     (Join-Path $projectRoot "WifiSwitcherApp.ps1"),
-    (Join-Path $PSScriptRoot "WifiSwitcherApp.ps1")
+    (Join-Path $PSScriptRoot "WifiSwitcherApp.ps1"),
+    (Join-Path $PSScriptRoot "test_simulation.ps1")
 )
 
 foreach ($p in $paths) {

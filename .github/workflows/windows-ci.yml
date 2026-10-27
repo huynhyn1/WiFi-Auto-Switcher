@@ -1,0 +1,41 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate PowerShell syntax and encoding
+        shell: powershell
+        run: .\src\check_bom.ps1
+
+      - name: Build Windows applications
+        shell: powershell
+        run: .\src\build.ps1
+
+      - name: Run UI and logic simulations
+        shell: powershell
+        run: .\src\test_simulation.ps1
+
+      - name: Package Windows release
+        shell: powershell
+        run: .\src\package.ps1
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WiFi-Auto-Switcher-Windows
+          path: dist\WiFi-Auto-Switcher-*-Windows.zip
+          if-no-files-found: error

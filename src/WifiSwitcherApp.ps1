@@ -1,6 +1,6 @@
 ﻿<#
     ==========================================================================
-    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.2
+    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.3
     Hệ thống Tự Động 100% Giám Sát & Chuyển Đổi Wi-Fi Thông Minh Trên Windows
     Bản quyền thương mại / Zero-Dependency Portable Suite
     Mã hóa: UTF-8 with BOM (Hiển thị 100% phông chữ tiếng Việt chuẩn Segoe UI)
@@ -364,7 +364,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <TextBlock x:Name="TxtSidebarUptime" Text="00:00" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Border BorderBrush="#1E293B" BorderThickness="0,1,0,0" Margin="0,8,0,6"/>
-                                <TextBlock Text="Tác giả: S.Nova • v2.6.2" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tác giả: S.Nova • v2.6.3" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -818,7 +818,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                                     <TextBlock Text="Tác giả: S.Nova" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.2 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
+                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.3 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="TxtAuthorDesc" Text="Hệ thống tự động giám sát độ trễ &amp; chuyển đổi Wi-Fi thông minh trên Windows." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -1252,8 +1252,21 @@ function Get-RouterGatewayIP {
     return "192.168.1.1"
 }
 
-function Get-WifiCurrentMetrics {
-    $raw = netsh wlan show interfaces
+function Get-NetshFieldValue {
+    param(
+        [string]$line,
+        [string[]]$labels
+    )
+    $labelPattern = ($labels | ForEach-Object { [regex]::Escape($_) }) -join "|"
+    if ($line -match "^\s*(?:$labelPattern)\s*:\s*(.*?)\s*$") {
+        return $matches[1]
+    }
+    return $null
+}
+
+function ConvertFrom-NetshWifiInterfaces {
+    param([string[]]$lines)
+
     $status = [PSCustomObject]@{
         Connected    = $false
         SSID         = "Chưa kết nối"
@@ -1265,23 +1278,31 @@ function Get-WifiCurrentMetrics {
         BSSID        = "N/A"
         RadioType    = "N/A"
     }
-    foreach ($line in $raw) {
-        if ($line -match '^\s*State\s*:\s*(.+)$') {
-            $st = $matches[1].Trim().ToLower()
-            if ($st -eq 'connected' -or $st -eq 'đã kết nối') { $status.Connected = $true }
+    foreach ($line in $lines) {
+        $value = Get-NetshFieldValue -line $line -labels @("State", "Trạng thái")
+        if ($null -ne $value) {
+            $st = $value.Trim().ToLowerInvariant()
+            if ($st -eq "connected" -or $st -eq "đã kết nối") { $status.Connected = $true }
         }
-        elseif ($line -match '^\s*SSID\s*:\s*(.+)$') { 
-            $status.SSID = $matches[1].Trim() 
-            if ($status.SSID -and $status.SSID -ne "Chưa kết nối") { $status.Connected = $true }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("SSID"))) {
+            $status.SSID = $value.Trim()
+            if ($status.SSID -and $status.SSID -ne "Chưa kết nối" -and $status.SSID -ne "<None>") { $status.Connected = $true }
         }
-        elseif ($line -match '^\s*AP BSSID\s*:\s*(.+)$') { $status.BSSID = $matches[1].Trim() }
-        elseif ($line -match '(\d+)%') { $status.Signal = [int]$matches[1] }
-        elseif ($line -match 'Receive rate.*:\s*([\d\.]+)') { $status.ReceiveRate = [int][double]$matches[1] }
-        elseif ($line -match 'Transmit rate.*:\s*([\d\.]+)') { $status.TransmitRate = [int][double]$matches[1] }
-        elseif ($line -match '^\s*Band\s*:\s*(.+)$') { $status.Band = $matches[1].Trim() }
-        elseif ($line -match 'Channel\s*:\s*(\d+)') { $status.Channel = [int]$matches[1] }
-        elseif ($line -match 'Radio type\s*:\s*(.+)$') { $status.RadioType = $matches[1].Trim() }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("AP BSSID", "BSSID"))) { $status.BSSID = $value.Trim() }
+        elseif ($line -match '^\s*(?:Signal|Tín hiệu)\s*:\s*(\d+)\s*%') { $status.Signal = [int]$matches[1] }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Receive rate", "Receive rate (Mbps)", "Tốc độ nhận", "Tốc độ nhận (Mbps)", "Tốc độ thu", "Tốc độ thu (Mbps)"))) {
+            $rate = $value -replace ",", "."
+            if ($rate -match '([\d]+(?:\.[\d]+)?)') { $status.ReceiveRate = [int][double]::Parse($matches[1], [Globalization.CultureInfo]::InvariantCulture) }
+        }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Transmit rate", "Transmit rate (Mbps)", "Tốc độ truyền", "Tốc độ truyền (Mbps)", "Tốc độ phát", "Tốc độ phát (Mbps)"))) {
+            $rate = $value -replace ",", "."
+            if ($rate -match '([\d]+(?:\.[\d]+)?)') { $status.TransmitRate = [int][double]::Parse($matches[1], [Globalization.CultureInfo]::InvariantCulture) }
+        }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Band", "Băng tần"))) { $status.Band = $value.Trim() }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Channel", "Kênh")) -and $value -match '^(\d+)') { $status.Channel = [int]$matches[1] }
+        elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Radio type", "Loại radio", "Loại vô tuyến"))) { $status.RadioType = $value.Trim() }
     }
+
     # Fallback suy luận Band từ Channel nếu netsh không in dòng Band
     if (($status.Band -eq "N/A" -or [string]::IsNullOrEmpty($status.Band)) -and $status.Channel -gt 0) {
         if ($status.Channel -le 14) { $status.Band = "2.4 GHz" }
@@ -1289,6 +1310,11 @@ function Get-WifiCurrentMetrics {
         else { $status.Band = "6 GHz" }
     }
     return $status
+}
+
+function Get-WifiCurrentMetrics {
+    $raw = netsh wlan show interfaces
+    return ConvertFrom-NetshWifiInterfaces -lines $raw
 }
 
 function Get-AllSavedProfiles {
@@ -1308,6 +1334,15 @@ function Get-AllSavedProfiles {
 function Scan-RadarWifiNetworks {
     param([System.Collections.Generic.List[string]]$savedProfiles, [string]$currentSSID)
     $raw = netsh wlan show networks mode=bssid
+    return ConvertFrom-NetshWifiNetworks -lines $raw -savedProfiles $savedProfiles -currentSSID $currentSSID
+}
+
+function ConvertFrom-NetshWifiNetworks {
+    param(
+        [string[]]$lines,
+        [System.Collections.Generic.List[string]]$savedProfiles,
+        [string]$currentSSID
+    )
     $dict = [System.Collections.Generic.Dictionary[string, PSCustomObject]]::new()
     $cSSID = ""
     $cSignal = 0
@@ -1347,26 +1382,30 @@ function Scan-RadarWifiNetworks {
         }
     }
 
-    foreach ($line in $raw) {
-        if ($line -match '^SSID\s+\d+\s*:\s*(.*)$') {
+    foreach ($line in $lines) {
+        if ($line -match '^\s*SSID\s+\d+\s*:\s*(.*)$') {
+            $newSSID = $matches[1].Trim()
             & $saveNetwork
-            $cSSID = $matches[1].Trim()
+            $cSSID = $newSSID
             $cSignal = 0
             $cBand = ""
             $cRadio = ""
             $cChannel = 0
         }
-        elseif ($line -match 'Signal\s*:\s*(\d+)%') {
+        elseif ($line -match '^\s*(?:Signal|Tín hiệu)\s*:\s*(\d+)\s*%') {
             $cSignal = [int]$matches[1]
         }
-        elseif ($line -match 'Radio type\s*:\s*(.+)$') {
-            $cRadio = $matches[1].Trim()
-        }
-        elseif ($line -match 'Band\s*:\s*(.+)$') {
-            $cBand = $matches[1].Trim()
-        }
-        elseif ($line -match 'Channel\s*:\s*(\d+)') {
-            $cChannel = [int]$matches[1]
+        else {
+            $value = Get-NetshFieldValue -line $line -labels @("Radio type", "Loại radio", "Loại vô tuyến")
+            if ($null -ne $value) {
+                $cRadio = $value.Trim()
+            }
+            elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Band", "Băng tần"))) {
+                $cBand = $value.Trim()
+            }
+            elseif ($null -ne ($value = Get-NetshFieldValue -line $line -labels @("Channel", "Kênh")) -and $value -match '^(\d+)') {
+                $cChannel = [int]$matches[1]
+            }
         }
     }
     & $saveNetwork
@@ -1425,7 +1464,7 @@ function Measure-DualPingAndSpeed {
         try {
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.2")
+            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.3")
             $data = $wc.DownloadData($speedUrl)
             $sw.Stop()
             if ($data.Length -gt 0 -and $sw.Elapsed.TotalSeconds -gt 0.04) {
@@ -2230,7 +2269,7 @@ $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
 $isSilentStart = ($Global:AppCliArgs -contains "--minimized" -or $Global:AppCliArgs -contains "--tray" -or $Global:AppCliArgs -contains "--startup")
 
 $window.Add_Loaded({
-    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.2." "SYSTEM"
+    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.3." "SYSTEM"
     Add-AuditLog "Chế độ bảo vệ tự động đang hoạt động ngầm. Chu kỳ quét: $($Global:Config.CheckIntervalSeconds)s." "SYSTEM"
     
     # Khởi tạo trạng thái Profile trực quan đúng với config.json

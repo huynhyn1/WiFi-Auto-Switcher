@@ -11,8 +11,8 @@ using Microsoft.Win32;
 [assembly: AssemblyProduct("WiFi Auto Switcher Pro")]
 [assembly: AssemblyCompany("S.Nova")]
 [assembly: AssemblyDescription("Trình cài đặt WiFi Auto Switcher Pro - Tác giả: S.Nova")]
-[assembly: AssemblyVersion("2.6.2.0")]
-[assembly: AssemblyFileVersion("2.6.2.0")]
+[assembly: AssemblyVersion("2.6.3.0")]
+[assembly: AssemblyFileVersion("2.6.3.0")]
 [assembly: AssemblyCopyright("Copyright © 2026 S.Nova")]
 
 public class SetupForm : Form {
@@ -60,7 +60,7 @@ public class SetupForm : Form {
         headerPanel.BackColor = Color.FromArgb(30, 41, 59); // #1E293B
 
         Label lblTitle = new Label();
-        lblTitle.Text = "⚡ WiFi Auto Switcher Pro v2.6.2";
+        lblTitle.Text = "⚡ WiFi Auto Switcher Pro v2.6.3";
         lblTitle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
         lblTitle.ForeColor = Color.FromArgb(56, 189, 248); // #38BDF8
         lblTitle.Location = new Point(24, 16);
@@ -275,7 +275,7 @@ public class SetupForm : Form {
                     throw new IOException("Không thể đăng ký WiFi Auto Switcher Pro trong Windows Settings.");
                 }
                 uninstKey.SetValue("DisplayName", "WiFi Auto Switcher Pro");
-                uninstKey.SetValue("DisplayVersion", "2.6.2");
+                uninstKey.SetValue("DisplayVersion", "2.6.3");
                 uninstKey.SetValue("Publisher", "S.Nova");
                 uninstKey.SetValue("InstallLocation", installDirectory);
                 uninstKey.SetValue("DisplayIcon", File.Exists(icoPath) ? icoPath + ",0" : exePath + ",0");

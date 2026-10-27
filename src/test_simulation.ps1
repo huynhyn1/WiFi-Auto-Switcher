@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6.2
+# WiFi Auto Switcher Pro v2.6.3
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -143,6 +143,48 @@ try {
     Record-Test "Stronger candidate meets improvement threshold" (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 48 -minimumImprovement 8) "Mang thay the manh hon du nguong"
     Record-Test "Slightly stronger candidate is rejected" (-not (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 47 -minimumImprovement 8)) "Khong doi sang mang chi manh hon mot chut"
     Record-Test "Equal signal candidate is rejected" (-not (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 40 -minimumImprovement 0)) "Khong doi sang mang co song bang mang hien tai"
+
+    Write-Host "`n>>> KIEM TRA PHAN TICH NETSH DA NGON NGU..." -ForegroundColor Yellow
+    $englishInterface = @(
+        "    State                  : connected",
+        "    SSID                   : Home WiFi",
+        "    AP BSSID               : 00:11:22:33:44:55",
+        "    Radio type             : 802.11ac",
+        "    Channel                : 36",
+        "    Receive rate (Mbps)    : 866.7",
+        "    Transmit rate (Mbps)   : 780.5",
+        "    Signal                 : 92%"
+    )
+    $englishMetrics = ConvertFrom-NetshWifiInterfaces -lines $englishInterface
+    Record-Test "English netsh interface parsing" ($englishMetrics.Connected -and $englishMetrics.SSID -eq "Home WiFi" -and $englishMetrics.Signal -eq 92 -and $englishMetrics.ReceiveRate -eq 867 -and $englishMetrics.TransmitRate -eq 780 -and $englishMetrics.Channel -eq 36) "Doc dung SSID, song, toc do, kenh tu output tieng Anh"
+
+    $vietnameseInterface = @(
+        "    Trạng thái             : đã kết nối",
+        "    SSID                   : WiFi Nhà",
+        "    BSSID                  : 00:11:22:33:44:66",
+        "    Loại radio             : 802.11ac",
+        "    Kênh                   : 44",
+        "    Tốc độ nhận (Mbps)     : 433,3",
+        "    Tốc độ truyền (Mbps)   : 390,5",
+        "    Tín hiệu               : 78%"
+    )
+    $vietnameseMetrics = ConvertFrom-NetshWifiInterfaces -lines $vietnameseInterface
+    $vietnameseMetricsPass = ($vietnameseMetrics.Connected -and $vietnameseMetrics.SSID -eq "WiFi Nhà" -and $vietnameseMetrics.Signal -eq 78 -and $vietnameseMetrics.ReceiveRate -eq 433 -and $vietnameseMetrics.TransmitRate -eq 390 -and $vietnameseMetrics.Channel -eq 44)
+    Record-Test "Vietnamese netsh interface parsing" $vietnameseMetricsPass ("SSID={0}; Signal={1}; Rx={2}; Tx={3}; Channel={4}; Connected={5}" -f $vietnameseMetrics.SSID, $vietnameseMetrics.Signal, $vietnameseMetrics.ReceiveRate, $vietnameseMetrics.TransmitRate, $vietnameseMetrics.Channel, $vietnameseMetrics.Connected)
+
+    $savedProfilesForParser = [System.Collections.Generic.List[string]]::new()
+    $savedProfilesForParser.Add("WiFi Nhà")
+    $vietnameseRadar = @(
+        "SSID 1 : WiFi Nhà",
+        "    Tín hiệu             : 82%",
+        "    Loại radio           : 802.11ax",
+        "    Kênh                 : 149",
+        "    SSID 2 : Guest"
+    )
+    $parsedRadar = @(ConvertFrom-NetshWifiNetworks -lines $vietnameseRadar -savedProfiles $savedProfilesForParser -currentSSID "WiFi Nhà")
+    $radarPass = ($parsedRadar.Count -eq 2 -and $parsedRadar[0].SSID -eq "WiFi Nhà" -and $parsedRadar[0].Signal -eq 82 -and $parsedRadar[0].IsSaved -and $parsedRadar[0].IsCurrent -and $parsedRadar[0].Band -eq "5 GHz")
+    $radarDetails = ($parsedRadar | ForEach-Object { "{0} (Signal={1}, Saved={2}, Current={3}, Band={4})" -f $_.SSID, $_.Signal, $_.IsSaved, $_.IsCurrent, $_.Band }) -join "; "
+    Record-Test "Vietnamese netsh radar parsing" $radarPass ("Count={0}; {1}" -f $parsedRadar.Count, $radarDetails)
 
     Write-Host "`n>>> 6. MO PHONG NHAT KY KIEM TOAN (AUDIT LOGS)..." -ForegroundColor Yellow
     Add-AuditLog "Mo phong bai test ghi log he thong tu dong." "SYSTEM"
