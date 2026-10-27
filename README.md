@@ -36,13 +36,21 @@ Mã nguồn chính nằm trong `src/`. Trên Windows, mở PowerShell tại thư
 
 Script biên dịch tạo `WiFiAutoSwitcher.exe` và `Setup.exe` ở thư mục gốc. Dự án sử dụng trình biên dịch C# và các thành phần Windows PowerShell có sẵn trên Windows.
 
+Để đóng gói bản chạy:
+
+```powershell
+.\src\package.ps1
+```
+
+Gói ZIP được tạo trong `dist/`. Có thể truyền `-OutputPath` để chọn vị trí lưu khác.
+
 ## Cấu trúc dự án
 
 | Đường dẫn | Nội dung |
 | --- | --- |
 | `src/` | Mã nguồn C#, ứng dụng PowerShell, script build và kiểm thử |
 | `legacy/` | Các script khởi chạy và cài đặt cũ |
-| `Setup.exe` | Trình cài đặt |
+| `Setup.exe` | Tiện ích tạo shortcut và cấu hình khởi động cùng Windows |
 | `WiFiAutoSwitcher.exe` | Ứng dụng Windows |
 | `WifiSwitcherApp.ps1` | Script ứng dụng chạy cạnh tệp `.exe` |
 | `config.json` | Cấu hình mặc định |

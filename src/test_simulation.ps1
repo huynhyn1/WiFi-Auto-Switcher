@@ -172,4 +172,5 @@ if ($failedCount -eq 0) {
     Write-Host "`n>>> TOAN BO GIAO DIEN VA LOGIC DA DUOC MO PHONG HOAN HAO 100%! <<<" -ForegroundColor Green
 } else {
     Write-Host "`n>>> CAN KIEM TRA CAC MUC THAT BAI TREN! <<<" -ForegroundColor Red
+    exit 1
 }

@@ -1,10 +1,15 @@
 $enc = New-Object System.Text.UTF8Encoding($true)
+$projectRoot = Split-Path -Parent $PSScriptRoot
 $paths = @(
-    "c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\WifiSwitcherApp.ps1",
-    "c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\src\WifiSwitcherApp.ps1"
+    (Join-Path $projectRoot "WifiSwitcherApp.ps1"),
+    (Join-Path $PSScriptRoot "WifiSwitcherApp.ps1")
 )
 
 foreach ($p in $paths) {
+    if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {
+        throw "PowerShell source file not found: $p"
+    }
+
     $content = [System.IO.File]::ReadAllText($p, [System.Text.Encoding]::UTF8)
     [System.IO.File]::WriteAllText($p, $content, $enc)
 
@@ -16,5 +21,6 @@ foreach ($p in $paths) {
         foreach ($e in $errors) {
             Write-Host ("  Line {0}: {1}" -f $e.Extent.StartLineNumber, $e.Message)
         }
+        exit 1
     }
 }

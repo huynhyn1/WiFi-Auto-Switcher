@@ -1,23 +1,62 @@
-# Script tao file ZIP phat hanh WiFi Auto Switcher Pro v2.5
-# Tac gia: S.Nova
+param(
+    [string]$OutputPath
+)
 
-$zipPath = 'c:\Users\SuperNova\Desktop\WiFi-Auto-Switcher-Pro-v2.5.zip'
-if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+$ErrorActionPreference = "Stop"
+$projectRoot = Split-Path -Parent $PSScriptRoot
 
-$tempDir = Join-Path $env:TEMP ('wifi_dist_' + [guid]::NewGuid().ToString().Substring(0,8))
-$pkgDir = Join-Path $tempDir 'WiFi_Auto_Switcher'
-New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
+$requiredFiles = @(
+    "Setup.exe",
+    "WiFiAutoSwitcher.exe",
+    "WifiSwitcherApp.ps1",
+    "config.json",
+    "app.ico",
+    "HUONG-DAN-SU-DUNG.html",
+    "README.md",
+    "LICENSE"
+)
 
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\WiFiAutoSwitcher.exe' -Destination $pkgDir -Force
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\Setup.exe' -Destination $pkgDir -Force
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\config.json' -Destination $pkgDir -Force
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\app.ico' -Destination $pkgDir -Force
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\HUONG-DAN-SU-DUNG.html' -Destination $pkgDir -Force
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\README.md' -Destination $pkgDir -Force
-Copy-Item 'c:\Users\SuperNova\Desktop\WiFi_Auto_Switcher\src' -Destination $pkgDir -Recurse -Force
+foreach ($file in $requiredFiles) {
+    $sourcePath = Join-Path $projectRoot $file
+    if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+        throw "Required release file not found: $sourcePath"
+    }
+}
 
-Compress-Archive -Path $pkgDir -DestinationPath $zipPath -CompressionLevel Optimal
-Remove-Item -Path $tempDir -Recurse -Force
+$fileVersion = (Get-Item (Join-Path $projectRoot "WiFiAutoSwitcher.exe")).VersionInfo.FileVersion
+try {
+    $version = [version]$fileVersion
+} catch {
+    throw "Could not read a valid version from WiFiAutoSwitcher.exe: '$fileVersion'"
+}
 
-$item = Get-Item $zipPath
-Write-Host "ZIP created successfully: $($item.FullName) - $($item.Length) bytes"
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $outputDirectory = Join-Path $projectRoot "dist"
+    $OutputPath = Join-Path $outputDirectory ("WiFi-Auto-Switcher-v{0}.{1}-Windows.zip" -f $version.Major, $version.Minor)
+} else {
+    $OutputPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
+    $outputDirectory = Split-Path -Parent $OutputPath
+}
+
+if ([string]::IsNullOrWhiteSpace($outputDirectory)) {
+    throw "OutputPath must include a directory."
+}
+
+New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+
+$stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("wifi-auto-switcher-" + [guid]::NewGuid().ToString("N"))
+$packageDirectory = Join-Path $stagingRoot ("WiFi-Auto-Switcher-v{0}.{1}-Windows" -f $version.Major, $version.Minor)
+
+try {
+    New-Item -ItemType Directory -Path $packageDirectory -Force | Out-Null
+    foreach ($file in $requiredFiles) {
+        Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $packageDirectory
+    }
+
+    Compress-Archive -Path $packageDirectory -DestinationPath $OutputPath -CompressionLevel Optimal -Force
+    Write-Output "Release package created: $OutputPath"
+} finally {
+    if (Test-Path -LiteralPath $stagingRoot) {
+        Remove-Item -LiteralPath $stagingRoot -Recurse -Force
+    }
+}

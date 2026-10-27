@@ -7,6 +7,9 @@ BaoCao-SuKien-WiFi.csv
 # User config override
 # config.json (giu lai file mau)
 
+# Generated release packages
+/dist/
+
 # OS generated files
 Thumbs.db
 Desktop.ini
