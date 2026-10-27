@@ -4,6 +4,7 @@
 
 [![Latest release](https://img.shields.io/github/v/release/huynhyn1/WiFi-Auto-Switcher)](https://github.com/huynhyn1/WiFi-Auto-Switcher/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/huynhyn1/WiFi-Auto-Switcher/total)](https://github.com/huynhyn1/WiFi-Auto-Switcher/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Tải bản Windows:** [Mở trang Releases](https://github.com/huynhyn1/WiFi-Auto-Switcher/releases/latest) và tải gói ZIP để cài đặt đầy đủ.
 
@@ -49,4 +50,4 @@ Script biên dịch tạo `WiFiAutoSwitcher.exe` và `Setup.exe` ở thư mục 
 
 ## Tác giả
 
-Phát triển bởi **S.Nova**. Bản quyền © 2026 S.Nova.
+Phát triển bởi **S.Nova**. Phân phối theo giấy phép [MIT](LICENSE).
