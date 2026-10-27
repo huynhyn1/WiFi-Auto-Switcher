@@ -1,6 +1,6 @@
 ﻿<#
     ==========================================================================
-    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.1
+    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.2
     Hệ thống Tự Động 100% Giám Sát & Chuyển Đổi Wi-Fi Thông Minh Trên Windows
     Bản quyền thương mại / Zero-Dependency Portable Suite
     Mã hóa: UTF-8 with BOM (Hiển thị 100% phông chữ tiếng Việt chuẩn Segoe UI)
@@ -97,6 +97,7 @@ $Global:IsAutoSwitchRunning = $Global:Config.AutoSwitchEnabled
 $Global:IsCheckingNow       = $false
 $Global:LastSwitchTime      = [DateTime]::MinValue
 $Global:ConsecutiveFails    = 0
+$Global:LowDownloadCount    = 0
 $Global:StartTime           = [DateTime]::Now
 $Global:PingHistory         = [System.Collections.Generic.List[int]]::new()
 $Global:EventLogsList       = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -363,7 +364,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <TextBlock x:Name="TxtSidebarUptime" Text="00:00" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Border BorderBrush="#1E293B" BorderThickness="0,1,0,0" Margin="0,8,0,6"/>
-                                <TextBlock Text="Tác giả: S.Nova • v2.6.1" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tác giả: S.Nova • v2.6.2" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -817,7 +818,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                                     <TextBlock Text="Tác giả: S.Nova" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.1 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
+                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.2 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="TxtAuthorDesc" Text="Hệ thống tự động giám sát độ trễ &amp; chuyển đổi Wi-Fi thông minh trên Windows." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -1424,7 +1425,7 @@ function Measure-DualPingAndSpeed {
         try {
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.1")
+            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.2")
             $data = $wc.DownloadData($speedUrl)
             $sw.Stop()
             if ($data.Length -gt 0 -and $sw.Elapsed.TotalSeconds -gt 0.04) {
@@ -1698,6 +1699,23 @@ function Test-DownloadSpeedBelowMinimum {
     return ($speedMbps -lt $minimumMbps)
 }
 
+function Test-DownloadFailureConfirmed {
+    param([int]$consecutiveFailures)
+    return ($consecutiveFailures -ge 3)
+}
+
+function Test-AlternativeNetworkIsBetter {
+    param(
+        [bool]$currentConnected,
+        [int]$currentSignal,
+        [int]$candidateSignal,
+        [int]$minimumImprovement
+    )
+    if (-not $currentConnected) { return $true }
+    $requiredImprovement = [Math]::Max(1, $minimumImprovement)
+    return ($candidateSignal -ge ($currentSignal + $requiredImprovement))
+}
+
 # ==================== THUẬT TOÁN TỰ ĐỘNG CHUYỂN MẠNG 100% ====================
 
 function Execute-MonitoringCycle {
@@ -1720,6 +1738,12 @@ function Execute-MonitoringCycle {
             $isLagging = $false
             $isEmergency = $false
             $reasons = [System.Collections.Generic.List[string]]::new()
+            $downloadBelowMinimum = Test-DownloadSpeedBelowMinimum -speedMbps $metrics.SpeedMbps -minimumMbps $Global:Config.MinSpeedMbps
+            if ($downloadBelowMinimum) {
+                $Global:LowDownloadCount++
+            } else {
+                $Global:LowDownloadCount = 0
+            }
 
             if (-not $curWifi.Connected -or -not $metrics.IsOnline) {
                 $isLagging = $true
@@ -1741,12 +1765,21 @@ function Execute-MonitoringCycle {
                     $reasons.Add("Mất gói tin ($($metrics.PacketLoss)%) vượt mức cho phép")
                 }
 
-                if (Test-DownloadSpeedBelowMinimum -speedMbps $metrics.SpeedMbps -minimumMbps $Global:Config.MinSpeedMbps) {
-                    $isLagging = $true
-                    if ($metrics.SpeedMbps -le 0) {
-                        $reasons.Add("Không đo được tốc độ tải xuống (0 Mbps)")
+                if ($downloadBelowMinimum) {
+                    if (Test-DownloadFailureConfirmed -consecutiveFailures $Global:LowDownloadCount) {
+                        $isLagging = $true
+                        if ($metrics.SpeedMbps -le 0) {
+                            if ($metrics.LanPingMs -lt 0) {
+                                $reasons.Add("Đo tốc độ tải xuống thất bại liên tiếp; không liên lạc được router")
+                            } else {
+                                $reasons.Add("Đo tốc độ tải xuống thất bại liên tiếp dù router vẫn phản hồi")
+                            }
+                        } else {
+                            $reasons.Add("Tốc độ tải xuống ($($metrics.SpeedMbps) Mbps) thấp hơn ngưỡng $($Global:Config.MinSpeedMbps) Mbps trong nhiều lần kiểm tra")
+                        }
                     } else {
-                        $reasons.Add("Băng thông ($($metrics.SpeedMbps) Mbps) &lt; $($Global:Config.MinSpeedMbps) Mbps")
+                        $checksRemaining = 3 - $Global:LowDownloadCount
+                        Add-AuditLog "Tốc độ tải xuống chưa đạt ($($metrics.SpeedMbps) Mbps); sẽ xác nhận lại sau $checksRemaining lần kiểm tra nữa." "INFO"
                     }
                 }
 
@@ -1774,11 +1807,12 @@ function Execute-MonitoringCycle {
 
                     if ($candidates -and $candidates.Count -gt 0) {
                         $bestTarget = $candidates[0]
-                        if ((-not $curWifi.Connected) -or ($bestTarget.Signal -ge ($curWifi.Signal + $Global:Config.MinSignalImprovement)) -or ($curWifi.Signal -lt 35)) {
+                        $requiredImprovement = [Math]::Max(1, $Global:Config.MinSignalImprovement)
+                        if (Test-AlternativeNetworkIsBetter -currentConnected $curWifi.Connected -currentSignal $curWifi.Signal -candidateSignal $bestTarget.Signal -minimumImprovement $Global:Config.MinSignalImprovement) {
                             Add-AuditLog "[TỰ ĐỘNG 100%] Đang chuyển đổi sang Wi-Fi '$($bestTarget.SSID)' (Sóng $($bestTarget.Signal)%, $($bestTarget.Band))..." "SWITCH"
                             Connect-TargetWifi -ssid $bestTarget.SSID
                         } else {
-                            Add-AuditLog "Wi-Fi '$($bestTarget.SSID)' chưa mạnh hơn đáng kể ($($bestTarget.Signal)% vs $($curWifi.Signal)%). Tiếp tục giữ mạng." "INFO"
+                            Add-AuditLog "Wi-Fi '$($bestTarget.SSID)' chưa tốt hơn đủ mức ($($bestTarget.Signal)% vs $($curWifi.Signal)%; cần hơn ít nhất $requiredImprovement%). Tiếp tục giữ mạng." "INFO"
                         }
                     } else {
                         Add-AuditLog "Không tìm thấy Wi-Fi đã lưu nào khác có sóng tốt xung quanh." "WARN"
@@ -1790,6 +1824,8 @@ function Execute-MonitoringCycle {
                 }
                 $Global:ConsecutiveFails = 0
             }
+        } else {
+            $Global:LowDownloadCount = 0
         }
     } catch {
         Add-AuditLog "Lỗi trong chu kỳ giám sát: $($_.Exception.Message)" "ERROR"
@@ -2194,7 +2230,7 @@ $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
 $isSilentStart = ($Global:AppCliArgs -contains "--minimized" -or $Global:AppCliArgs -contains "--tray" -or $Global:AppCliArgs -contains "--startup")
 
 $window.Add_Loaded({
-    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.1." "SYSTEM"
+    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.2." "SYSTEM"
     Add-AuditLog "Chế độ bảo vệ tự động đang hoạt động ngầm. Chu kỳ quét: $($Global:Config.CheckIntervalSeconds)s." "SYSTEM"
     
     # Khởi tạo trạng thái Profile trực quan đúng với config.json

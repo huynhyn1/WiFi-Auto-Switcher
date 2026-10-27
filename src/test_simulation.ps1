@@ -1,6 +1,6 @@
 # ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6.1
+# WiFi Auto Switcher Pro v2.6.2
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -135,6 +135,14 @@ try {
     Record-Test "Download below minimum triggers" (Test-DownloadSpeedBelowMinimum -speedMbps 1.5 -minimumMbps 2) "Toc do thap hon nguong kich hoat dieu kien mang yeu"
     Record-Test "Download at minimum does not trigger" (-not (Test-DownloadSpeedBelowMinimum -speedMbps 2 -minimumMbps 2)) "Toc do bang nguong khong bi xem la thap"
     Record-Test "Download above minimum does not trigger" (-not (Test-DownloadSpeedBelowMinimum -speedMbps 5 -minimumMbps 2)) "Toc do tren nguong khong bi xem la thap"
+    Record-Test "First low-speed result waits for confirmation" (-not (Test-DownloadFailureConfirmed -consecutiveFailures 1)) "Mot lan do thap chua kich hoat chuyen mang"
+    Record-Test "Second low-speed result waits for confirmation" (-not (Test-DownloadFailureConfirmed -consecutiveFailures 2)) "Hai lan do thap lien tiep van cho xac nhan"
+    Record-Test "Repeated low-speed result is confirmed" (Test-DownloadFailureConfirmed -consecutiveFailures 3) "Ba lan kiem tra lien tiep duoi nguong duoc xac nhan"
+    Record-Test "Recovered speed clears confirmation" (-not (Test-DownloadFailureConfirmed -consecutiveFailures 0)) "Ket noi phuc hoi se khong giu loi cu"
+    Record-Test "Disconnected network accepts available candidate" (Test-AlternativeNetworkIsBetter -currentConnected $false -currentSignal 0 -candidateSignal 30 -minimumImprovement 8) "Cho phep thu mang thay the khi mat ket noi"
+    Record-Test "Stronger candidate meets improvement threshold" (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 48 -minimumImprovement 8) "Mang thay the manh hon du nguong"
+    Record-Test "Slightly stronger candidate is rejected" (-not (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 47 -minimumImprovement 8)) "Khong doi sang mang chi manh hon mot chut"
+    Record-Test "Equal signal candidate is rejected" (-not (Test-AlternativeNetworkIsBetter -currentConnected $true -currentSignal 40 -candidateSignal 40 -minimumImprovement 0)) "Khong doi sang mang co song bang mang hien tai"
 
     Write-Host "`n>>> 6. MO PHONG NHAT KY KIEM TOAN (AUDIT LOGS)..." -ForegroundColor Yellow
     Add-AuditLog "Mo phong bai test ghi log he thong tu dong." "SYSTEM"
