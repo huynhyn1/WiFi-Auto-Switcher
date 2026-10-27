@@ -1,0 +1,13 @@
+# Logs and temporary files
+*.log
+*.tmp
+*.csv
+BaoCao-SuKien-WiFi.csv
+
+# User config override
+# config.json (giu lai file mau)
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+.DS_Store

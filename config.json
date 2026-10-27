@@ -1,0 +1,21 @@
+﻿{
+    "AutoSwitchEnabled":  true,
+    "ActiveProfile":  "Gaming",
+    "MaxPingMs":  80,
+    "MinSpeedMbps":  5,
+    "MinSignalPercent":  50,
+    "MaxPacketLossPercent":  5,
+    "CheckIntervalSeconds":  4,
+    "CooldownSeconds":  15,
+    "MinSignalImprovement":  5,
+    "TargetPingHost":  "8.8.8.8",
+    "SpeedTestUrl":  "https://speed.cloudflare.com/__down?bytes=524288",
+    "ShowNotifications":  true,
+    "ShowMiniWidget":  true,
+    "AutoStartWithWindows":  true,
+    "MinimizeToTrayOnClose":  true,
+    "PlaySoundOnSwitch":  true,
+    "TotalSwitchesCount":  0,
+    "MiniWidgetX":  -1,
+    "MiniWidgetY":  -1
+}

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Auto Switcher Pro Enterprise v2.5 - Hướng Dẫn Sử Dụng</title>
+    <style>
+        :root {
+            --bg-dark: #080C14;
+            --bg-card: #0F172A;
+            --border-color: #1E293B;
+            --primary: #2563EB;
+            --primary-glow: #38BDF8;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Hero Banner */
+        .hero {
+            background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #0F172A 100%);
+            border: 1px solid #312E81;
+            border-radius: 18px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge-enterprise {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.2);
+            color: #60A5FA;
+            border: 1px solid #3B82F6;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 700px;
+            margin: 0 auto 20px auto;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-glow);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .card-feature {
+            background: #0A0E17;
+            border: 1px solid #1E293B;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .card-feature h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #38BDF8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-feature p {
+            font-size: 13px;
+            color: #94A3B8;
+            line-height: 1.5;
+        }
+
+        /* Steps */
+        .step-list {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .step-item {
+            counter-increment: step-counter;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .step-num {
+            background: #1E3A8A;
+            color: #38BDF8;
+            border: 1px solid #2563EB;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Pill / Tag */
+        .tag-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34D399;
+            border: 1px solid #059669;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-blue {
+            background: rgba(37, 99, 235, 0.15);
+            color: #60A5FA;
+            border: 1px solid #2563EB;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        th {
+            background: #0A0E17;
+            color: #64748B;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        td {
+            color: #CBD5E1;
+        }
+
+        .footer {
+            text-align: center;
+            color: #64748B;
+            font-size: 12px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Header -->
+        <div class="hero">
+            <span class="badge-enterprise">Enterprise Commercial Suite v2.5 • Tác giả: S.Nova</span>
+            <h1>WiFi Auto Switcher Pro</h1>
+            <p>Phần mềm tự động giám sát độ trễ (Ping) và chuyển đổi sang Wi-Fi mạnh nhất khi mạng yếu, chập chờn • Phát triển bởi <strong>S.Nova</strong> • Hỗ trợ song ngữ Tiếng Việt &amp; English</p>
+            
+            <div class="hero-stats">
+                <div class="stat-box">
+                    <div class="stat-val">100% Tự Động</div>
+                    <div class="stat-label">Không cần can thiệp thủ công</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val">Zero-Install</div>
+                    <div class="stat-label">Cắm sang máy khác chạy được ngay</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val">Bảo Mật Tuyệt Đối</div>
+                    <div class="stat-label">Tự lấy Wi-Fi đã lưu, không cần nhập mật khẩu</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val">Mini HUD Widget</div>
+                    <div class="stat-label">Bảng theo dõi nổi trên màn hình</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khởi Động Nhanh -->
+        <div class="section">
+            <h2 class="section-title">🚀 Khởi Động Nhanh Trong 3 Bước</h2>
+            <ul class="step-list">
+                <li class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Mở ứng dụng trực tiếp hoặc Cài đặt nhanh</h4>
+                        <p>Nhấp đúp chuột vào <strong><code>WiFiAutoSwitcher.exe</code></strong> để mở ngay, hoặc chạy <strong><code>Setup.exe</code></strong> để kích hoạt Shortcut Desktop và tự khởi động ngầm cùng Windows.</p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Quan sát Bảng Điều Khiển Pro</h4>
+                        <p>Giao diện hiển thị ngay <strong>Điểm Sức Khỏe Mạng (Health Score)</strong>, Độ trễ kép (Router LAN + Internet WAN), Tốc độ tải và Cột sóng thời gian thực.</p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Yên tâm làm việc &amp; chơi game</h4>
+                        <p>Ứng dụng sẽ tự động chạy ngầm dưới khay hệ thống (System Tray). Mỗi khi mạng hiện tại bị lag, rớt gói hoặc yếu sóng, phần mềm sẽ tự chuyển sang Wi-Fi tốt hơn và phát âm thanh thông báo.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Các Tính Năng Cao Cấp -->
+        <div class="section">
+            <h2 class="section-title">⚡ 5 Phân Hệ Quản Trị Chuyên Nghiệp</h2>
+            <div class="grid-2">
+                <div class="card-feature">
+                    <h3>📊 1. Tổng Quan (Dashboard)</h3>
+                    <p>Theo dõi chỉ số sức khỏe mạng 0-100, biểu đồ Sparkline lịch sử độ trễ 16 lần kiểm tra gần nhất, đo đạc đồng thời kết nối Router nội bộ và Internet thế giới.</p>
+                </div>
+                <div class="card-feature">
+                    <h3>⚡ 2. Tự Động Đổi Mạng (Smart Switch)</h3>
+                    <p>Tích hợp 3 Profile cài đặt sẵn (Gaming &amp; Họp online, Văn phòng &amp; Phim ảnh, Tiết kiệm &amp; Ổn định) cùng khả năng tinh chỉnh từng mili-giây độ trễ.</p>
+                </div>
+                <div class="card-feature">
+                    <h3>📶 3. Radar Quét Sóng (Wi-Fi Radar)</h3>
+                    <p>Quét toàn bộ quang phổ sóng Wi-Fi xung quanh, phân loại rõ mạng 2.4GHz / 5GHz, mạng đã lưu trên máy tính và hỗ trợ chuyển mạng tức thì chỉ với 1 click.</p>
+                </div>
+                <div class="card-feature">
+                    <h3>📈 4. Nhật Ký &amp; Thống Kê (Analytics)</h3>
+                    <p>Đếm số lần tự động cứu mạng thành công, đo độ trễ trung bình, tỷ lệ uptime và hỗ trợ xuất toàn bộ lịch sử ra file báo cáo <strong>BaoCao-SuKien-WiFi.csv</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng Cấu Hình Tiêu Chí -->
+        <div class="section">
+            <h2 class="section-title">⚙️ Các Chế Độ Tối Ưu (Profiles)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Chế Độ</th>
+                        <th>Ngưỡng Ping</th>
+                        <th>Ngưỡng Tốc Độ</th>
+                        <th>Mất Gói Tin</th>
+                        <th>Mục Đích Sử Dụng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="tag-blue">🎮 Gaming / Họp</span></td>
+                        <td>&gt; 80 ms</td>
+                        <td>&lt; 5.0 Mbps</td>
+                        <td>&gt; 5%</td>
+                        <td>Độ trễ thấp tuyệt đối, không lag khi chơi game, livestream hoặc họp Zoom/Teams.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-green">🌐 Tiêu Chuẩn</span></td>
+                        <td>&gt; 150 ms</td>
+                        <td>&lt; 2.0 Mbps</td>
+                        <td>&gt; 25%</td>
+                        <td>Cân bằng tối ưu, phù hợp cho văn phòng, học tập, xem video 4K YouTube/Netflix.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-blue">🔋 Tiết Kiệm</span></td>
+                        <td>&gt; 220 ms</td>
+                        <td>&lt; 1.0 Mbps</td>
+                        <td>&gt; 40%</td>
+                        <td>Ổn định cao, chỉ đổi khi mất mạng hoặc sóng cực yếu (&lt; 25%).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Hướng Dẫn Di Chuyển Máy Khác -->
+        <div class="section">
+            <h2 class="section-title">💼 Hướng Dẫn Mang Sang Máy Tính Khác</h2>
+            <p style="color: #CBD5E1; margin-bottom: 15px;">Phần mềm được thiết kế theo tiêu chuẩn <strong>Native Portable (Chạy độc lập)</strong>, không cần cài đặt thêm bất kỳ môi trường hay thư viện nào:</p>
+            <ol style="margin-left: 20px; color: #94A3B8; font-size: 14px; line-height: 1.8;">
+                <li>Chép toàn bộ thư mục <code>WiFi_Auto_Switcher</code> sang USB hoặc máy tính mới.</li>
+                <li>Mở file <strong><code>Setup.exe</code></strong> để tự động tạo Shortcut ra màn hình Desktop và thiết lập tự khởi động cùng Windows nếu muốn.</li>
+                <li>Ứng dụng tự động nhận diện tất cả các mạng Wi-Fi đã lưu trên máy tính đó mà <strong>không đòi hỏi nhập mật khẩu</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            WiFi Auto Switcher Pro Enterprise v2.5 • Tác giả: <strong>S.Nova</strong> • Hỗ trợ song ngữ Tiếng Việt &amp; English • 100% Pure Windows Native
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+﻿{
+    "Language":  "vi",
+    "AutoSwitchEnabled":  true,
+    "ActiveProfile":  "Custom",
+    "MaxPingMs":  220,
+    "MinSpeedMbps":  1,
+    "MinSignalPercent":  25,
+    "MaxPacketLossPercent":  40,
+    "CheckIntervalSeconds":  10,
+    "CooldownSeconds":  30,
+    "MinSignalImprovement":  8,
+    "TargetPingHost":  "8.8.8.8",
+    "SpeedTestUrl":  "https://speed.cloudflare.com/__down?bytes=524288",
+    "ShowNotifications":  true,
+    "ShowMiniWidget":  true,
+    "AutoStartWithWindows":  true,
+    "MinimizeToTrayOnClose":  true,
+    "PlaySoundOnSwitch":  true,
+    "TotalSwitchesCount":  0,
+    "MiniWidgetX":  -1,
+    "MiniWidgetY":  -1
+}
