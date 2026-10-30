@@ -1,6 +1,6 @@
 ﻿# ==============================================================================
 # FULL UI & LOGIC SIMULATION TEST HARNESS
-# WiFi Auto Switcher Pro v2.6.6
+# WiFi Auto Switcher Pro v2.6.7
 # Tac gia: S.Nova
 # ==============================================================================
 
@@ -71,6 +71,12 @@ try {
     } else {
         Record-Test "Mini HUD Init" $false "Khong khoi tao duoc MiniHUD"
     }
+
+    Show-CompactWidget
+    $compactModeWorks = ($miniWindow.IsVisible -and -not $window.IsVisible)
+    Show-ControlDashboard
+    $dashboardModeWorks = ($window.IsVisible -and -not $miniWindow.IsVisible)
+    Record-Test "Dashboard and widget are unified modes" ($compactModeWorks -and $dashboardModeWorks) "Chuyen duoc giua bang dieu khien va widget, chi hien mot cua so moi lan"
 
     Write-Host "`n>>> 2. MO PHONG CHUYEN DOI 5 PHAN HE GIAO DIEN (TABS)..." -ForegroundColor Yellow
     $tabs = @(
@@ -239,6 +245,7 @@ try {
     Write-Host ("LOI NGOAI LE: " + $_.Exception.ToString()) -ForegroundColor Red
     Record-Test "Execution Exception" $false $_.Exception.Message
 } finally {
+    $Global:IsExiting = $true
     if ($notifyIcon) { 
         $notifyIcon.Visible = $false
         $notifyIcon.Dispose() 

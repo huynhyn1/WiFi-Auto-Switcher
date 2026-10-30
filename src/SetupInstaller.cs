@@ -11,8 +11,8 @@ using Microsoft.Win32;
 [assembly: AssemblyProduct("WiFi Auto Switcher Pro")]
 [assembly: AssemblyCompany("S.Nova")]
 [assembly: AssemblyDescription("Trình cài đặt WiFi Auto Switcher Pro - Tác giả: S.Nova")]
-[assembly: AssemblyVersion("2.6.6.0")]
-[assembly: AssemblyFileVersion("2.6.6.0")]
+[assembly: AssemblyVersion("2.6.7.0")]
+[assembly: AssemblyFileVersion("2.6.7.0")]
 [assembly: AssemblyCopyright("Copyright © 2026 S.Nova")]
 
 public class SetupForm : Form {
@@ -60,7 +60,7 @@ public class SetupForm : Form {
         headerPanel.BackColor = Color.FromArgb(30, 41, 59); // #1E293B
 
         Label lblTitle = new Label();
-        lblTitle.Text = "⚡ WiFi Auto Switcher Pro v2.6.6";
+        lblTitle.Text = "⚡ WiFi Auto Switcher Pro v2.6.7";
         lblTitle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
         lblTitle.ForeColor = Color.FromArgb(56, 189, 248); // #38BDF8
         lblTitle.Location = new Point(24, 16);
@@ -262,11 +262,20 @@ public class SetupForm : Form {
                 }
             }
 
-            // Dọn dẹp shortcut cũ trong Startup folder nếu có
+            // Dọn dẹp shortcut cũ trên Desktop nếu có
+            string oldLegacyDesktopLnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "WiFi Auto Switcher.lnk");
+            if (File.Exists(oldLegacyDesktopLnk)) {
+                try { File.Delete(oldLegacyDesktopLnk); } catch { }
+            }
+
+            // Dọn dẹp shortcut cũ trong Startup folder nếu có (cả bản Pro và bản cũ)
             string startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
-            string oldLnk = Path.Combine(startupFolder, "WiFiAutoSwitcherPro.lnk");
-            if (File.Exists(oldLnk)) {
-                try { File.Delete(oldLnk); } catch { }
+            string[] legacyStartupFiles = new string[] { "WiFiAutoSwitcherPro.lnk", "WiFiAutoSwitcher.lnk" };
+            foreach (string file in legacyStartupFiles) {
+                string oldLnk = Path.Combine(startupFolder, file);
+                if (File.Exists(oldLnk)) {
+                    try { File.Delete(oldLnk); } catch { }
+                }
             }
 
             // 3. Đăng ký thông tin trong Control Panel (Add/Remove Programs)
@@ -275,7 +284,7 @@ public class SetupForm : Form {
                     throw new IOException("Không thể đăng ký WiFi Auto Switcher Pro trong Windows Settings.");
                 }
                 uninstKey.SetValue("DisplayName", "WiFi Auto Switcher Pro");
-                uninstKey.SetValue("DisplayVersion", "2.6.6");
+                uninstKey.SetValue("DisplayVersion", "2.6.7");
                 uninstKey.SetValue("Publisher", "S.Nova");
                 uninstKey.SetValue("InstallLocation", installDirectory);
                 uninstKey.SetValue("DisplayIcon", File.Exists(icoPath) ? icoPath + ",0" : exePath + ",0");
@@ -384,10 +393,13 @@ public class SetupForm : Form {
                 }
             }
 
-            // 2. Xóa Desktop Shortcut
+            // 2. Xóa Desktop Shortcut (cả bản Pro và bản cũ)
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            string shortcutPath = Path.Combine(desktopPath, "WiFi Auto Switcher Pro.lnk");
-            if (File.Exists(shortcutPath)) { File.Delete(shortcutPath); }
+            string[] legacyDesktopFiles = new string[] { "WiFi Auto Switcher Pro.lnk", "WiFi Auto Switcher.lnk" };
+            foreach (string file in legacyDesktopFiles) {
+                string shortcutPath = Path.Combine(desktopPath, file);
+                if (File.Exists(shortcutPath)) { try { File.Delete(shortcutPath); } catch { } }
+            }
 
             // 3. Xóa Startup Registry
             using (RegistryKey runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true)) {
@@ -396,10 +408,13 @@ public class SetupForm : Form {
                 }
             }
 
-            // 4. Xóa Startup folder link nếu có
+            // 4. Xóa Startup folder link nếu có (cả bản Pro và bản cũ)
             string startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
-            string oldLnk = Path.Combine(startupFolder, "WiFiAutoSwitcherPro.lnk");
-            if (File.Exists(oldLnk)) { File.Delete(oldLnk); }
+            string[] legacyStartupFiles = new string[] { "WiFiAutoSwitcherPro.lnk", "WiFiAutoSwitcher.lnk" };
+            foreach (string file in legacyStartupFiles) {
+                string oldLnk = Path.Combine(startupFolder, file);
+                if (File.Exists(oldLnk)) { try { File.Delete(oldLnk); } catch { } }
+            }
 
             // 5. Xóa Registry Uninstall
             Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\WiFiAutoSwitcherPro", false);

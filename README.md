@@ -1,4 +1,4 @@
-# WiFi Auto Switcher Pro v2.6.6
+# WiFi Auto Switcher Pro v2.6.7
 
 Ứng dụng Windows theo dõi chất lượng kết nối và tự động chuyển sang mạng Wi-Fi đã lưu phù hợp hơn.
 
@@ -20,6 +20,7 @@
 - Giao diện tiếng Việt và tiếng Anh, kèm cửa sổ mini theo dõi trạng thái mạng.
 - Phân tích thông tin Wi-Fi từ Windows bằng cả tiếng Việt và tiếng Anh.
 - Có thể chạy trực tiếp hoặc thiết lập shortcut và khởi động cùng Windows.
+- Bảng điều khiển và widget là hai chế độ của cùng ứng dụng: thu nhỏ để chuyển sang widget, bấm nút mở rộng để quay lại bảng đầy đủ; đóng ở chế độ nào cũng thoát ứng dụng hoàn toàn.
 
 ## Cài đặt
 

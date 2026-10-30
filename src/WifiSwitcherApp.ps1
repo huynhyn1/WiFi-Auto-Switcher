@@ -1,6 +1,6 @@
 ﻿<#
     ==========================================================================
-    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.6
+    WIFI AUTO SWITCHER PRO - ENTERPRISE COMMERCIAL EDITION v2.6.7
     Hệ thống Tự Động 100% Giám Sát & Chuyển Đổi Wi-Fi Thông Minh Trên Windows
     Bản quyền thương mại / Zero-Dependency Portable Suite
     Mã hóa: UTF-8 with BOM (Hiển thị 100% phông chữ tiếng Việt chuẩn Segoe UI)
@@ -44,7 +44,6 @@ $DefaultConfig = [PSCustomObject]@{
     ShowNotifications       = $true
     ShowMiniWidget          = $true
     AutoStartWithWindows    = $true
-    MinimizeToTrayOnClose   = $true
     PlaySoundOnSwitch       = $true
     TotalSwitchesCount      = 0
     MiniWidgetX             = -1
@@ -95,6 +94,7 @@ Set-StartupRegistry ($Global:Config.AutoStartWithWindows)
 # Biến trạng thái hoạt động toàn cục
 $Global:IsAutoSwitchRunning = $Global:Config.AutoSwitchEnabled
 $Global:IsCheckingNow       = $false
+$Global:IsExiting           = $false
 $Global:LastSwitchTime      = [DateTime]::MinValue
 $Global:ConsecutiveFails    = 0
 $Global:LowDownloadCount    = 0
@@ -290,7 +290,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                 <!-- Titlebar Window Controls -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
                     <Button x:Name="BtnTitleLang" Style="{StaticResource ProBtnSecondary}" Content="🌐 VI" Padding="8,4" Margin="0,0,8,0" FontSize="11" ToolTip="Chuyển Đổi Ngôn Ngữ / Switch Language (Tiếng Việt / English)"/>
-                    <Button x:Name="BtnTitleMiniHUD" Style="{StaticResource ProBtnSecondary}" Content="📌 Bảng Nhỏ (HUD)" Padding="10,4" Margin="0,0,8,0" FontSize="11"/>
+                    <Button x:Name="BtnTitleMiniHUD" Style="{StaticResource ProBtnSecondary}" Content="Thu nhỏ vào widget" Padding="10,4" Margin="0,0,8,0" FontSize="11"/>
                     <Button x:Name="BtnTitleMinimize" Width="38" Height="32" Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Content="—" FontSize="12" FontWeight="Bold" Cursor="Hand"/>
                     <Button x:Name="BtnTitleClose" Width="38" Height="32" Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Content="✕" FontSize="12" FontWeight="Bold" Cursor="Hand"/>
                 </StackPanel>
@@ -366,7 +366,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <TextBlock x:Name="TxtSidebarUptime" Text="00:00" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Border BorderBrush="#1E293B" BorderThickness="0,1,0,0" Margin="0,8,0,6"/>
-                                <TextBlock Text="Tác giả: S.Nova • v2.6.6" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tác giả: S.Nova • v2.6.7" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -786,11 +786,9 @@ $Global:DetectedGateway     = "192.168.1.1"
                                     <Border BorderBrush="#1F293D" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
 
                                     <CheckBox x:Name="CbSettingsAutoStart" Style="{StaticResource ProCheckBox}" Content="Tự động khởi động ngầm cùng Windows (Khuyên dùng)" Margin="0,0,0,14"/>
-                                    <CheckBox x:Name="CbSettingsMiniHUD" Style="{StaticResource ProCheckBox}" Content="Luôn hiển thị Bảng Nhỏ nổi trên màn hình (Mini HUD Desktop Widget)" Margin="0,0,0,14"/>
+                                    <CheckBox x:Name="CbSettingsMiniHUD" Style="{StaticResource ProCheckBox}" Content="Hiện widget thu gọn khi khởi động cùng Windows" Margin="0,0,0,14"/>
                                     <CheckBox x:Name="CbSettingsPlaySound" Style="{StaticResource ProCheckBox}" Content="Phát âm thanh thông báo tinh tế khi tự động chuyển mạng" Margin="0,0,0,14"/>
                                     <CheckBox x:Name="CbSettingsShowNotify" Style="{StaticResource ProCheckBox}" Content="Bật thông báo khay hệ thống (Windows Balloon Notification)" Margin="0,0,0,14"/>
-                                    <CheckBox x:Name="CbSettingsMinimizeClose" Style="{StaticResource ProCheckBox}" Content="Khi bấm nút đóng (✕), tự động thu nhỏ xuống khay thay vì tắt tool" Margin="0,0,0,18"/>
-
                                     <Border BorderBrush="#1F293D" BorderThickness="0,1,0,0" Margin="0,0,0,16"/>
 
                                     <Grid Margin="0,0,0,12">
@@ -820,7 +818,7 @@ $Global:DetectedGateway     = "192.168.1.1"
                                                     <TextBlock Text="Tác giả: S.Nova" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.6 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
+                                            <TextBlock Text="WiFi Auto Switcher Pro v2.6.7 • Developed by S.Nova" FontSize="12" Foreground="#F8FAFC" FontWeight="SemiBold"/>
                                             <TextBlock x:Name="TxtAuthorDesc" Text="Hệ thống tự động giám sát độ trễ &amp; chuyển đổi Wi-Fi thông minh trên Windows." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -861,13 +859,15 @@ $Global:DetectedGateway     = "192.168.1.1"
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="⚡" FontSize="11" Foreground="#38BDF8" Margin="0,0,4,0"/>
                     <TextBlock x:Name="MiniSsid" Text="Đang kết nối..." FontSize="12" FontWeight="Bold" Foreground="#F8FAFC" MaxWidth="140" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
                 <TextBlock Grid.Column="1" x:Name="MiniSignal" Text="0%" FontSize="11" FontWeight="Bold" Foreground="#10B981" Margin="6,0,8,0" VerticalAlignment="Center"/>
-                <Button Grid.Column="2" x:Name="MiniBtnClose" Content="✕" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Background="#1E293B" BorderThickness="0" Cursor="Hand" Width="18" Height="18" VerticalAlignment="Center">
+                <Button Grid.Column="2" x:Name="MiniBtnExpand" Content="□" FontSize="11" FontWeight="Bold" Foreground="#CBD5E1" Background="#1E293B" BorderThickness="0" Cursor="Hand" Width="22" Height="20" Margin="0,0,5,0" VerticalAlignment="Center" ToolTip="Mở bảng điều khiển"/>
+                <Button Grid.Column="3" x:Name="MiniBtnClose" Content="✕" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Background="#1E293B" BorderThickness="0" Cursor="Hand" Width="18" Height="18" VerticalAlignment="Center" ToolTip="Thoát ứng dụng">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" CornerRadius="9">
@@ -916,6 +916,7 @@ if ($Global:Config.MiniWidgetX -gt 0 -and $Global:Config.MiniWidgetY -gt 0) {
 
 # Kéo thả Mini HUD và lưu vị trí
 $miniWindow.Add_MouseLeftButtonDown({
+    if ($_.Source -is [System.Windows.Controls.Button]) { return }
     $miniWindow.DragMove()
     $Global:Config.MiniWidgetX = [int]$miniWindow.Left
     $Global:Config.MiniWidgetY = [int]$miniWindow.Top
@@ -1019,7 +1020,6 @@ $CbSettingsAutoStart     = $window.FindName("CbSettingsAutoStart")
 $CbSettingsMiniHUD       = $window.FindName("CbSettingsMiniHUD")
 $CbSettingsPlaySound     = $window.FindName("CbSettingsPlaySound")
 $CbSettingsShowNotify    = $window.FindName("CbSettingsShowNotify")
-$CbSettingsMinimizeClose = $window.FindName("CbSettingsMinimizeClose")
 $TbSettingsPingHost      = $window.FindName("TbSettingsPingHost")
 $TbSettingsSpeedUrl      = $window.FindName("TbSettingsSpeedUrl")
 $BtnSaveAllSettings      = $window.FindName("BtnSaveAllSettings")
@@ -1027,6 +1027,7 @@ $BtnSaveAllSettings      = $window.FindName("BtnSaveAllSettings")
 # Mini HUD Controls
 $MiniSsid                = $miniWindow.FindName("MiniSsid")
 $MiniSignal              = $miniWindow.FindName("MiniSignal")
+$MiniBtnExpand            = $miniWindow.FindName("MiniBtnExpand")
 $MiniBtnClose            = $miniWindow.FindName("MiniBtnClose")
 $MiniPingDot             = $miniWindow.FindName("MiniPingDot")
 $MiniPing                = $miniWindow.FindName("MiniPing")
@@ -1044,7 +1045,6 @@ $CbSettingsAutoStart.IsChecked     = [bool]$Global:Config.AutoStartWithWindows
 $CbSettingsMiniHUD.IsChecked       = [bool]$Global:Config.ShowMiniWidget
 $CbSettingsPlaySound.IsChecked     = [bool]$Global:Config.PlaySoundOnSwitch
 $CbSettingsShowNotify.IsChecked    = [bool]$Global:Config.ShowNotifications
-$CbSettingsMinimizeClose.IsChecked = [bool]$Global:Config.MinimizeToTrayOnClose
 $TbSettingsPingHost.Text           = $Global:Config.TargetPingHost
 $TbSettingsSpeedUrl.Text           = $Global:Config.SpeedTestUrl
 
@@ -1073,31 +1073,51 @@ $trayMenu.Items.Add("-") | Out-Null
 $menuExit = $trayMenu.Items.Add("Thoát Hoàn Toàn Ứng Dụng")
 $notifyIcon.ContextMenuStrip = $trayMenu
 
-$menuShow.Add_Click({
+function Show-ControlDashboard {
+    if ($miniWindow.IsVisible) {
+        $miniWindow.Hide()
+    }
     $window.Show()
     $window.WindowState = [System.Windows.WindowState]::Normal
     $window.Activate()
+}
+
+function Show-CompactWidget {
+    if (-not $miniWindow.IsVisible) {
+        $miniWindow.Show()
+    }
+    $window.Hide()
+}
+
+function Exit-WifiSwitcherApp {
+    if ($Global:IsExiting) { return }
+    $Global:IsExiting = $true
+
+    if ($monitorTimer) { $monitorTimer.Stop() }
+    if ($notifyIcon) {
+        $notifyIcon.Visible = $false
+        $notifyIcon.Dispose()
+    }
+    if ($miniWindow) { $miniWindow.Close() }
+    if ($window) { $window.Close() }
+    [System.Windows.Application]::Current.Shutdown()
+}
+
+$menuShow.Add_Click({
+    Show-ControlDashboard
 })
 $menuHud.Add_Click({
-    if ($miniWindow.IsVisible) {
-        $miniWindow.Hide()
-        $Global:Config.ShowMiniWidget = $false
+    if ($window.IsVisible) {
+        Show-CompactWidget
     } else {
-        $miniWindow.Show()
-        $Global:Config.ShowMiniWidget = $true
+        Show-ControlDashboard
     }
 })
 $notifyIcon.Add_DoubleClick({
-    $window.Show()
-    $window.WindowState = [System.Windows.WindowState]::Normal
-    $window.Activate()
+    Show-ControlDashboard
 })
 $menuExit.Add_Click({
-    $notifyIcon.Visible = $false
-    $notifyIcon.Dispose()
-    $miniWindow.Close()
-    $window.Close()
-    [System.Windows.Application]::Current.Shutdown()
+    Exit-WifiSwitcherApp
 })
 
 # ==================== HÀM TIỆN ÍCH & GHI LOG ====================
@@ -1173,42 +1193,34 @@ $BtnTitleMinimize.Add_Click({
 })
 
 $BtnTitleClose.Add_Click({
-    if ($Global:Config.MinimizeToTrayOnClose) {
-        $window.Hide()
-        Show-ToastAlert "WiFi Auto Switcher Pro" "Ứng dụng tiếp tục chạy ngầm trong khay để bảo vệ kết nối." 2000
-    } else {
-        $notifyIcon.Visible = $false
-        $notifyIcon.Dispose()
-        $miniWindow.Close()
-        $window.Close()
-        [System.Windows.Application]::Current.Shutdown()
-    }
+    Exit-WifiSwitcherApp
 })
 
 $BtnTitleMiniHUD.Add_Click({
-    if ($miniWindow.IsVisible) {
-        $miniWindow.Hide()
-        $Global:Config.ShowMiniWidget = $false
-        $BtnTitleMiniHUD.Content = "📌 Bảng Nhỏ (HUD)"
-    } else {
-        $miniWindow.Show()
-        $Global:Config.ShowMiniWidget = $true
-        $BtnTitleMiniHUD.Content = "✕ Ẩn Bảng Nhỏ"
-    }
+    Show-CompactWidget
 })
 
 $MiniBtnClose.Add_Click({
-    $miniWindow.Hide()
-    $Global:Config.ShowMiniWidget = $false
-    $BtnTitleMiniHUD.Content = "📌 Bảng Nhỏ (HUD)"
+    Exit-WifiSwitcherApp
+})
+
+$MiniBtnExpand.Add_Click({
+    Show-ControlDashboard
 })
 
 $window.Add_Closing({
     param($sender, $e)
-    if ($Global:Config.MinimizeToTrayOnClose -and $notifyIcon.Visible) {
+    if (-not $Global:IsExiting) {
         $e.Cancel = $true
-        $window.Hide()
-        Show-ToastAlert "WiFi Auto Switcher Pro" "Ứng dụng tiếp tục chạy ngầm để bảo vệ mạng." 1500
+        $window.Dispatcher.BeginInvoke([System.Action]{ Exit-WifiSwitcherApp }) | Out-Null
+    }
+})
+
+$miniWindow.Add_Closing({
+    param($sender, $e)
+    if (-not $Global:IsExiting) {
+        $e.Cancel = $true
+        $miniWindow.Dispatcher.BeginInvoke([System.Action]{ Exit-WifiSwitcherApp }) | Out-Null
     }
 })
 
@@ -1473,7 +1485,7 @@ function Measure-DualPingAndSpeed {
         try {
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.6")
+            $wc.Headers.Add("User-Agent", "WifiSwitcherProEnterprise/2.6.7")
             $data = $wc.DownloadData($speedUrl)
             $sw.Stop()
             if ($data.Length -gt 0 -and $sw.Elapsed.TotalSeconds -gt 0.04) {
@@ -2265,13 +2277,7 @@ function Apply-Language ([string]$lang) {
             $TitleStatusText.Text = if ($isEn) { "AUTO-SWITCH PAUSED" } else { "ĐÃ TẠM DỪNG TỰ ĐỔI MẠNG" }
         }
     }
-    if ($BtnTitleMiniHUD) {
-        if ($miniWindow -and $miniWindow.IsVisible) {
-            $BtnTitleMiniHUD.Content = if ($isEn) { "✕ Hide Mini Widget" } else { "✕ Ẩn Bảng Nhỏ" }
-        } else {
-            $BtnTitleMiniHUD.Content = if ($isEn) { "📌 Mini Widget (HUD)" } else { "📌 Bảng Nhỏ (HUD)" }
-        }
-    }
+    if ($BtnTitleMiniHUD) { $BtnTitleMiniHUD.Content = if ($isEn) { "↘ Compact to widget" } else { "↘ Thu nhỏ vào widget" } }
 
     # 2. Update Navigation Sidebar
     if ($TxtNavMenuHeader)       { $TxtNavMenuHeader.Text       = if ($isEn) { "ADMIN MENU" } else { "MENU QUẢN TRỊ" } }
@@ -2329,10 +2335,9 @@ function Apply-Language ([string]$lang) {
     if ($TxtSettingsHeader)       { $TxtSettingsHeader.Text       = if ($isEn) { "ADVANCED SYSTEM SETTINGS" } else { "THIẾT LẬP NÂNG CAO CHO HỆ THỐNG" } }
     if ($TxtSettingsLangLabel)    { $TxtSettingsLangLabel.Text    = if ($isEn) { "Interface Language / Ngôn ngữ:" } else { "Ngôn ngữ giao diện (Language):" } }
     if ($CbSettingsAutoStart)     { $CbSettingsAutoStart.Content  = if ($isEn) { "Launch automatically in background on Windows startup (Recommended)" } else { "Tự động khởi động ngầm cùng Windows (Khuyên dùng)" } }
-    if ($CbSettingsMiniHUD)       { $CbSettingsMiniHUD.Content    = if ($isEn) { "Always show floating desktop widget (Mini HUD Desktop Widget)" } else { "Luôn hiển thị Bảng Nhỏ nổi trên màn hình (Mini HUD Desktop Widget)" } }
+    if ($CbSettingsMiniHUD)       { $CbSettingsMiniHUD.Content    = if ($isEn) { "Show compact widget on minimized startup" } else { "Hiện widget thu gọn khi khởi động cùng Windows" } }
     if ($CbSettingsPlaySound)     { $CbSettingsPlaySound.Content  = if ($isEn) { "Play audio chime notification when auto-switching Wi-Fi" } else { "Phát âm thanh thông báo tinh tế khi tự động chuyển mạng" } }
     if ($CbSettingsShowNotify)    { $CbSettingsShowNotify.Content = if ($isEn) { "Show desktop system tray balloon notifications for network events" } else { "Bật thông báo khay hệ thống (Windows Balloon Notification)" } }
-    if ($CbSettingsMinimizeClose) { $CbSettingsMinimizeClose.Content = if ($isEn) { "Minimize to system tray when clicking close (✕) instead of quitting" } else { "Khi bấm nút đóng (✕), tự động thu nhỏ xuống khay thay vì tắt tool" } }
     if ($TxtSettingsPingHostLabel){ $TxtSettingsPingHostLabel.Text= if ($isEn) { "Target Ping Host (DNS):" } else { "Máy chủ kiểm tra Ping (DNS):" } }
     if ($TxtSettingsSpeedUrlLabel){ $TxtSettingsSpeedUrlLabel.Text= if ($isEn) { "SpeedTest Download URL:" } else { "Đường dẫn kiểm tra SpeedTest:" } }
     if ($TxtAuthorHeader)         { $TxtAuthorHeader.Text         = if ($isEn) { "AUTHOR & VERSION INFO" } else { "THÔNG TIN TÁC GIẢ & PHIÊN BẢN" } }
@@ -2422,13 +2427,16 @@ $BtnSaveAllSettings.Add_Click({
         $Global:Config.ShowMiniWidget          = [bool]$CbSettingsMiniHUD.IsChecked
         $Global:Config.PlaySoundOnSwitch       = [bool]$CbSettingsPlaySound.IsChecked
         $Global:Config.ShowNotifications       = [bool]$CbSettingsShowNotify.IsChecked
-        $Global:Config.MinimizeToTrayOnClose   = [bool]$CbSettingsMinimizeClose.IsChecked
         $Global:Config.TargetPingHost          = $TbSettingsPingHost.Text.Trim()
         $Global:Config.SpeedTestUrl            = $TbSettingsSpeedUrl.Text.Trim()
 
         Set-StartupRegistry ($Global:Config.AutoStartWithWindows)
 
-        if ($Global:Config.ShowMiniWidget) { $miniWindow.Show() } else { $miniWindow.Hide() }
+        if ($Global:Config.ShowMiniWidget -and $isSilentStart -and -not $window.IsVisible) {
+            $miniWindow.Show()
+        } elseif (-not $Global:Config.ShowMiniWidget -and $isSilentStart) {
+            $miniWindow.Hide()
+        }
 
         $Global:Config | ConvertTo-Json -Depth 4 | Set-Content -Path $ConfigFile -Encoding UTF8
         Add-AuditLog "Đã lưu toàn bộ cấu hình hệ thống nâng cao thành công." "SUCCESS"
@@ -2476,7 +2484,7 @@ $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
 $isSilentStart = ($Global:AppCliArgs -contains "--minimized" -or $Global:AppCliArgs -contains "--tray" -or $Global:AppCliArgs -contains "--startup")
 
 $window.Add_Loaded({
-    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.6." "SYSTEM"
+    Add-AuditLog "Khởi động thành công WiFi Auto Switcher Pro Enterprise Edition v2.6.7." "SYSTEM"
     Add-AuditLog "Chế độ bảo vệ tự động đang hoạt động ngầm. Chu kỳ quét: $($Global:Config.CheckIntervalSeconds)s." "SYSTEM"
     
     # Khởi tạo trạng thái Profile trực quan đúng với config.json
@@ -2484,13 +2492,7 @@ $window.Add_Loaded({
         Set-ActiveProfile $Global:Config.ActiveProfile $false
     } catch { }
 
-    if ($Global:Config.ShowMiniWidget) {
-        $miniWindow.Show()
-        $BtnTitleMiniHUD.Content = "✕ Ẩn Bảng Nhỏ"
-    } else {
-        $BtnTitleMiniHUD.Content = "📌 Bảng Nhỏ (HUD)"
-    }
-
+    $BtnTitleMiniHUD.Content = if ($Global:Config.Language -eq "en") { "↘ Compact to widget" } else { "↘ Thu nhỏ vào widget" }
     $monitorTimer.Start()
     Execute-MonitoringCycle -forceCheck $true
 })
